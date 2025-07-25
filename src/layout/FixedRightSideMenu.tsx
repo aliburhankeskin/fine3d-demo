@@ -14,10 +14,15 @@ const FixedRightSideMenu = () => {
       alignItems="center"
       justifyContent="space-between"
       sx={{
+        position: "fixed",
+        top: 0,
+        right: 0,
         width: 60,
+        height: "100dvh",
         py: 2,
         boxShadow: 2,
         bgcolor: "card2.main",
+        zIndex: (theme) => theme.zIndex.appBar + 2, // Drawer'dan üstte dursun
       }}
     >
       <Stack spacing={2} alignItems="center">

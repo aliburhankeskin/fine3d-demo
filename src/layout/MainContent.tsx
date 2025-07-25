@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 import { Box } from "@mui/material";
 import TopFloatingBar from "./TopFloatingBar";
 import BottomFloatingBar from "./BottomFloatingBar";
