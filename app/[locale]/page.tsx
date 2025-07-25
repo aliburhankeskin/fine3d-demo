@@ -11,7 +11,7 @@ export default async function Page() {
       headers: {
         "Content-Type": "application/json",
         Authorization:
-          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL2V4cGlyZWQiOiIyNS4wNy4yMDI1IDIwOjE0OjI2IiwidW5pcXVlX25hbWUiOiJyb290dXNlciIsInJvbGUiOiJBcHAuU3VwZXJBZG1pbiIsInV0IjoiTWFuYWdlciIsIm5iZiI6MTc1MzQ3MjY2NiwiZXhwIjoxNzUzNDc0NDY2LCJpYXQiOjE3NTM0NzI2NjZ9.o8jHU70RhoI0t2-yRG5BC7cTqAmuKJtU8ovTiZWB7R0",
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL2V4cGlyZWQiOiIyNS4wNy4yMDI1IDIwOjQ3OjE0IiwidW5pcXVlX25hbWUiOiJyb290dXNlciIsInJvbGUiOiJBcHAuU3VwZXJBZG1pbiIsInV0IjoiTWFuYWdlciIsIm5iZiI6MTc1MzQ3NDYzNCwiZXhwIjoxNzUzNDc2NDM0LCJpYXQiOjE3NTM0NzQ2MzR9.LT5idNzRFYIe1z8rMe3jYbzhNU0FQzNGEMeCZOugkE4",
       },
     }
   );
