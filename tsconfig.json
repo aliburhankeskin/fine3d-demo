@@ -1,0 +1,75 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "downlevelIteration": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@layout/*": [
+        "./src/common/layout/*"
+      ],
+      "@opsTable/*": [
+        "./src/common/opsTable/*"
+      ],
+      "@common/*": [
+        "./src/common/*"
+      ],
+      "@components/*": [
+        "./src/components/*"
+      ],
+      "@enums/*": [
+        "./src/enums/*"
+      ],
+      "@features/*": [
+        "./src/features/*"
+      ],
+      "@forms/*": [
+        "./src/forms/*"
+      ],
+      "@helpers/*": [
+        "./src/helpers/*"
+      ],
+      "@hooks/*": [
+        "./src/hooks/*"
+      ],
+      "@network/*": [
+        "./src/network/*"
+      ],
+      "@redux/*": [
+        "./src/redux/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "module": "esnext"
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

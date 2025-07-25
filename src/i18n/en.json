@@ -1,0 +1,20 @@
+{
+  "Meta": {
+    "Title": "FineTridy",
+    "Description": "FineTridy"
+  },
+  "Common": {
+    "All": "All",
+    "SeeMore": "See More",
+    "ReadMore": "Read More",
+    "ViewDetails": "View Details",
+    "Submit": "Submit",
+    "Close": "Close",
+    "Loading": "Loading...",
+    "Error": "Error",
+    "Success": "Success",
+    "Warning": "Warning",
+    "Info": "Info",
+    "GetOffer": "Get Offer"
+  }
+}

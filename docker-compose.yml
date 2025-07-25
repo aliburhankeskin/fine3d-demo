@@ -1,0 +1,20 @@
+services:
+  finetridy-app:
+    container_name: finetridy-app
+    image: milvasoft/finetridy-app
+    restart: unless-stopped
+    pull_policy: never
+    networks:
+      container-network:
+        ipv4_address: 192.168.20.83
+
+networks:
+  container-network:
+    driver: bridge
+    name: container-network
+    external: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.20.0/24
+          gateway: 192.168.20.1

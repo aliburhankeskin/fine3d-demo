@@ -1,0 +1,20 @@
+{
+  "Meta": {
+    "Title": "Fine Tridy",
+    "Description": "Fine Tridy"
+  },
+  "Common": {
+    "All": "Tümü",
+    "SeeMore": "Daha Fazla Gör",
+    "ReadMore": "Daha Fazla Oku",
+    "ViewDetails": "Detayları Gör",
+    "Submit": "Gönder",
+    "Close": "Kapat",
+    "Loading": "Yükleniyor...",
+    "Error": "Hata",
+    "Success": "Başarılı",
+    "Warning": "Uyarı",
+    "Info": "Bilgi",
+    "GetOffer": "Teklif Al"
+  }
+}
