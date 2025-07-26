@@ -22,6 +22,7 @@ const FixedRightSideMenu = () => {
         py: 2,
         boxShadow: 2,
         bgcolor: "card2.main",
+        display: { xs: "none", md: "flex" },
         zIndex: (theme) => theme.zIndex.appBar + 2, // Drawer'dan üstte dursun
       }}
     >

@@ -31,13 +31,14 @@ export default function Canvas({
   config?: CanvasConfig;
   tabBarData?: any;
 }) {
+  const isMobile = window.innerWidth < 768;
   const {
     preloadFrameCount = 5,
     easeThreshold = 0.3,
     easeStart = 0.6,
     easeMultiplier = 1.2,
     easeMaxSpeed = 1.15,
-    easeSpeedFactor = 0.15,
+    easeSpeedFactor = 0.5,
     geometrySize = [16, 9],
     cameraHeight = 9,
   } = config;
@@ -62,7 +63,6 @@ export default function Canvas({
   const easeNormalToFast = (t: number): number => {
     return t < easeThreshold ? easeStart + t * easeMultiplier : easeMaxSpeed;
   };
-  const isMobile = window.innerWidth < 768;
 
   const preloadNearbyFrames = (centerIndex: number, radius: number = 2) => {
     const preloadSet = new Set<number>();
@@ -187,23 +187,25 @@ export default function Canvas({
 
     const animate = () => {
       requestAnimationFrame(animate);
-      let diff = targetFrameRef.current - currentFrameFloatRef.current;
-      if (Math.abs(diff) > totalFrames / 2)
-        diff = diff > 0 ? diff - totalFrames : diff + totalFrames;
 
-      const distance = Math.abs(diff);
-      if (distance < 0.3) {
-        currentFrameFloatRef.current = targetFrameRef.current;
-        preloadNearbyFrames(targetFrameRef.current, 5);
-      } else {
-        const t = Math.min(distance / 10, 1);
-        const easedSpeed = easeNormalToFast(t) * easeSpeedFactor;
+      let diff = targetFrameRef.current - currentFrameFloatRef.current;
+      if (Math.abs(diff) > totalFrames / 2) {
+        diff = diff > 0 ? diff - totalFrames : diff + totalFrames;
+      }
+
+      const direction = Math.sign(diff);
+      if (Math.abs(diff) >= 0.01) {
         const nextFloat =
-          currentFrameFloatRef.current + Math.sign(diff) * easedSpeed;
+          currentFrameFloatRef.current + direction * easeSpeedFactor;
         const nextFrame = safeMod(Math.round(nextFloat), totalFrames);
         const nextTexture = textureCacheRef.current.get(nextFrame);
-        if (nextTexture?.image) currentFrameFloatRef.current = nextFloat;
-        else preloadNearbyFrames(nextFrame, 5);
+
+        if (
+          nextTexture?.image?.complete &&
+          nextTexture.image.naturalWidth > 0
+        ) {
+          currentFrameFloatRef.current = nextFloat;
+        }
       }
 
       const displayFrame = safeMod(
@@ -224,7 +226,32 @@ export default function Canvas({
       renderer.render(scene, camera);
     };
 
-    animate();
+    const preloadAllFrames = async () => {
+      const promises: Promise<void>[] = [];
+
+      for (let i = 0; i < totalFrames; i++) {
+        const url = getImageUrl(i);
+        if (!textureCacheRef.current.has(i) && url) {
+          const p = new Promise<void>((resolve) => {
+            const tex = textureLoader.load(url, () => {
+              tex.colorSpace = THREE.SRGBColorSpace;
+              tex.minFilter = THREE.LinearFilter;
+              tex.magFilter = THREE.LinearFilter;
+              tex.generateMipmaps = false;
+              textureCacheRef.current.set(i, tex);
+              resolve();
+            });
+          });
+          promises.push(p);
+        }
+      }
+
+      await Promise.all(promises);
+      setIsLoading(false);
+      animate(); // ⬅️ preload sonrası animasyon başlasın
+    };
+    preloadAllFrames();
+    // animate();
 
     let isDragging = false;
     let lastX = 0;
@@ -312,7 +339,7 @@ export default function Canvas({
     <div
       ref={containerRef}
       style={{
-        minWidth: "768px",
+        minWidth: "1440px",
         width: "100%",
         height: "100vh",
         background: "#000",
