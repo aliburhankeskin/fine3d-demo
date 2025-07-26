@@ -62,12 +62,6 @@ export default function Canvas({
   const easeNormalToFast = (t: number): number => {
     return t < easeThreshold ? easeStart + t * easeMultiplier : easeMaxSpeed;
   };
-  const isMobile =
-    typeof window !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
-  const platformEaseSpeed = isMobile ? easeSpeedFactor * 0.7 : easeSpeedFactor;
-  let lastRenderTime = 0;
-  const maxFps = isMobile ? 30 : 60;
-  const frameDuration = 1000 / maxFps;
 
   const preloadNearbyFrames = (centerIndex: number, radius: number = 2) => {
     const preloadSet = new Set<number>();
@@ -130,19 +124,9 @@ export default function Canvas({
     camera.position.z = 10;
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({
-      antialias: !isMobile,
-      powerPreference: "high-performance",
-    });
-    const pixelRatio = isMobile ? 1.2 : Math.min(window.devicePixelRatio, 2);
-    renderer.setPixelRatio(pixelRatio);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setSize(container.clientWidth, container.clientHeight, false);
-    renderer.domElement.style.width = "100%";
-    renderer.domElement.style.height = "100%";
-    renderer.domElement.style.display = "block";
-    renderer.domElement.style.minWidth = "768px";
-    renderer.domElement.style.display = "block";
+    renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -204,7 +188,7 @@ export default function Canvas({
         preloadNearbyFrames(targetFrameRef.current, 5);
       } else {
         const t = Math.min(distance / 10, 1);
-        const easedSpeed = easeNormalToFast(t) * platformEaseSpeed;
+        const easedSpeed = easeNormalToFast(t) * easeSpeedFactor;
         const nextFloat =
           currentFrameFloatRef.current + Math.sign(diff) * easedSpeed;
         const nextFrame = safeMod(Math.round(nextFloat), totalFrames);
@@ -218,16 +202,14 @@ export default function Canvas({
         totalFrames
       );
 
-      if (displayFrame !== currentFrameRef.current) {
-        const currentTexture = textureCacheRef.current.get(displayFrame);
-        if (currentTexture?.image && meshRef.current) {
-          const mat = meshRef.current.material as THREE.MeshBasicMaterial;
-          if (mat.map !== currentTexture) {
-            mat.map = currentTexture;
-            mat.needsUpdate = true;
-          }
-          currentFrameRef.current = displayFrame;
+      const currentTexture = textureCacheRef.current.get(displayFrame);
+      if (currentTexture?.image && meshRef.current) {
+        const mat = meshRef.current.material as THREE.MeshBasicMaterial;
+        if (mat.map !== currentTexture) {
+          mat.map = currentTexture;
+          mat.needsUpdate = true;
         }
+        currentFrameRef.current = displayFrame;
       }
 
       renderer.render(scene, camera);
@@ -239,7 +221,7 @@ export default function Canvas({
     let lastX = 0;
 
     const updateFrameFromDelta = (delta: number) => {
-      const frameChange = isMobile ? delta / 18 : delta / 10;
+      const frameChange = delta / 10;
       targetFrameRef.current += frameChange;
       lastDragDeltaRef.current = frameChange;
     };
