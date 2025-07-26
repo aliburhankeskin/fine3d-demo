@@ -4,14 +4,11 @@ import { Box, Divider, IconButton, Stack, Typography } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 
 interface EtapDrawerContentProps {
-  blokSayisi: number;
-  daireSayisi: number;
+  data?: any;
 }
 
-const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
-  blokSayisi,
-  daireSayisi,
-}) => {
+const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({ data }) => {
+  console.log("EtapDrawerContent data:", data);
   return (
     <Box
       sx={{
@@ -28,7 +25,7 @@ const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
         mb={3}
       >
         <Typography fontSize={18} fontWeight={600}>
-          Etap Görünümü
+          Daireler
         </Typography>
         <IconButton size="small">
           <FavoriteBorderIcon sx={{ fontSize: 20 }} />
@@ -36,8 +33,13 @@ const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
       </Stack>
 
       <Stack spacing={1}>
-        <DrawerInfoRow label="Blok Sayısı" value={`${blokSayisi} Blok`} />
-        <DrawerInfoRow label="Daire Sayısı" value={`${daireSayisi} daire`} />
+        {data?.map((item: any, index: number) => (
+          <DrawerInfoRow
+            key={index}
+            label={item?.name}
+            value={item.floor?.name}
+          />
+        ))}
       </Stack>
     </Box>
   );

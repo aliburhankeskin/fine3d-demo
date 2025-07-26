@@ -25,9 +25,11 @@ function safeMod(n: number, m: number): number {
 export default function Canvas({
   workspaceItems = [],
   config = {},
+  tabBarData,
 }: {
   workspaceItems?: ITagItem[];
   config?: CanvasConfig;
+  tabBarData?: any;
 }) {
   const {
     preloadFrameCount = 5,
@@ -57,7 +59,6 @@ export default function Canvas({
   const targetFrameRef = useRef(mainFrameAnchors?.[0]);
   const currentFrameFloatRef = useRef(mainFrameAnchors?.[0]);
   const lastDragDeltaRef = useRef(0);
-  console.log("Total Frames:", currentFrameRef);
   const easeNormalToFast = (t: number): number => {
     return t < easeThreshold ? easeStart + t * easeMultiplier : easeMaxSpeed;
   };
@@ -338,7 +339,7 @@ export default function Canvas({
 
       <BottomFloatingControls />
 
-      <BottomFloatingBar />
+      <BottomFloatingBar data={tabBarData} />
     </div>
   );
 }

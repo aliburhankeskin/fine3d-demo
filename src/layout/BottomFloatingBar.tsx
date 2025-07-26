@@ -4,12 +4,11 @@ import { Box, ButtonBase } from "@mui/material";
 
 const stages = ["Etap Görünümü", "1. Etap", "2. Etap"];
 
-const BottomFloatingBar = () => {
+const BottomFloatingBar = ({ data }: any) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const tabWidth = 125;
   const horizontalPadding = 12;
   const verticalPadding = 6;
-
   return (
     <Box
       sx={{
@@ -50,9 +49,9 @@ const BottomFloatingBar = () => {
         }}
       />
 
-      {stages.map((stage, index) => (
+      {data[0]?.data?.map((block, index) => (
         <ButtonBase
-          key={stage}
+          key={block?.Id}
           onClick={() => setActiveIndex(index)}
           disableRipple
           disableTouchRipple
@@ -74,7 +73,7 @@ const BottomFloatingBar = () => {
             minHeight: "36px",
           }}
         >
-          {stage}
+          {block?.Name}
         </ButtonBase>
       ))}
     </Box>

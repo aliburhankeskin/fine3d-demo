@@ -45,38 +45,34 @@ export default async function Page({
     EntityId: initData?.projectId,
   };
 
-  const PresentationResponse = await axiosInstance.get<
-    IBaseResponse<IPresentationResponse>
-  >(OpsApiRoutes.GetPresentations, {
-    params: GeneralParams,
-    headers: {
-      "Accept-Language": getAcceptLanguage(locale),
-    },
-  });
+  const headers = {
+    "Accept-Language": getAcceptLanguage(locale),
+  };
 
-  const TabBarContentResponse = await axiosInstance.get(
-    OpsApiRoutes.GetPresentationTabBar,
-    {
-      params: GeneralParams,
-      headers: {
-        "Accept-Language": getAcceptLanguage(locale),
-      },
-    }
-  );
-
-  const RigthBarContentResponse = await axiosInstance.get(
-    OpsApiRoutes.GetPresentationRightBar,
-    {
-      params: GeneralParams,
-      headers: {
-        "Accept-Language": getAcceptLanguage(locale),
-      },
-    }
-  );
+  const [PresentationResponse, TabBarContentResponse, RightBarContentResponse] =
+    await Promise.all([
+      axiosInstance.get<IBaseResponse<IPresentationResponse>>(
+        OpsApiRoutes.GetPresentations,
+        { params: GeneralParams, headers }
+      ),
+      axiosInstance.get(OpsApiRoutes.GetPresentationTabBar, {
+        params: GeneralParams,
+        headers,
+      }),
+      axiosInstance.get(OpsApiRoutes.GetPresentationRightBar, {
+        params: GeneralParams,
+        headers,
+      }),
+    ]);
 
   return (
-    <AppLayout drawer={<EtapDrawerContent blokSayisi={6} daireSayisi={132} />}>
-      <Canvas workspaceItems={PresentationResponse?.data?.data?.tags || []} />
+    <AppLayout
+      drawer={<EtapDrawerContent data={RightBarContentResponse?.data?.data} />}
+    >
+      <Canvas
+        workspaceItems={PresentationResponse?.data?.data?.tags || []}
+        tabBarData={TabBarContentResponse?.data?.data}
+      />
     </AppLayout>
   );
 }
