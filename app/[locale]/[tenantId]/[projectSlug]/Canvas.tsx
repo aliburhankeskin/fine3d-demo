@@ -62,6 +62,7 @@ export default function Canvas({
   const easeNormalToFast = (t: number): number => {
     return t < easeThreshold ? easeStart + t * easeMultiplier : easeMaxSpeed;
   };
+  const isMobile = window.innerWidth < 768;
 
   const preloadNearbyFrames = (centerIndex: number, radius: number = 2) => {
     const preloadSet = new Set<number>();
@@ -124,8 +125,13 @@ export default function Canvas({
     camera.position.z = 10;
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: !isMobile, // mobilde false
+      alpha: false,
+      powerPreference: "high-performance",
+    });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
@@ -147,6 +153,9 @@ export default function Canvas({
                   if (!textureCacheRef.current.has(j) && getImageUrl(j)) {
                     const tex = textureLoader.load(getImageUrl(j));
                     tex.colorSpace = THREE.SRGBColorSpace;
+                    tex.minFilter = THREE.LinearFilter;
+                    tex.magFilter = THREE.LinearFilter;
+                    tex.generateMipmaps = false;
                     textureCacheRef.current.set(j, tex);
                   }
                 }
