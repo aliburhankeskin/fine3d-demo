@@ -87,6 +87,7 @@ export default async function RootLayout({
         />
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <title>{messages.Meta.Title}</title>
       </head>
       <body className={`${lato.className}`}>
         <NextIntlClientProvider messages={messages}>

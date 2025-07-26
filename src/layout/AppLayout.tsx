@@ -33,7 +33,15 @@ const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
       direction="row"
       sx={{ height: "100dvh", width: "100%", overflow: "hidden" }}
     >
-      <Box sx={{ flexGrow: 1, position: "relative", overflow: "hidden" }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          position: "relative",
+          overflow: "hidden",
+          paddingRight: isSmUp ? `${60}px` : "0px",
+          transition: "padding-right 0.3s ease",
+        }}
+      >
         {!isSmUp && (
           <IconButton
             color="inherit"
@@ -60,7 +68,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
             width: drawerWidth,
             boxSizing: "border-box",
             borderLeft: "1px solid #ddd",
-            marginRight: "60px", // FixedRightSideMenu kadar sağdan boşluk
+            marginRight: "60px",
           },
         }}
       >

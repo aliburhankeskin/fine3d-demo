@@ -1,7 +1,7 @@
 services:
-  finetridy-app:
-    container_name: finetridy-app
-    image: milvasoft/finetridy-app
+  fine3d-app:
+    container_name: fine3d-app
+    image: milvasoft/fine3d-app
     restart: unless-stopped
     pull_policy: never
     networks:
