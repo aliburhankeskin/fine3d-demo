@@ -37,7 +37,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
         sx={{
           flexGrow: 1,
           position: "relative",
-          overflow: "hidden",
+          overflowX: "auto",
           paddingRight: isSmUp ? `${60}px` : "0px",
           transition: "padding-right 0.3s ease",
         }}
@@ -47,7 +47,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
             color="inherit"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ position: "absolute", top: 16, left: 16, zIndex: 1100 }}
+            sx={{ position: "absolute", top: 16, right: 16, zIndex: 1100 }}
           >
             <MenuIcon />
           </IconButton>

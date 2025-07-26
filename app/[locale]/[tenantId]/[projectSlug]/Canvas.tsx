@@ -62,6 +62,12 @@ export default function Canvas({
   const easeNormalToFast = (t: number): number => {
     return t < easeThreshold ? easeStart + t * easeMultiplier : easeMaxSpeed;
   };
+  const isMobile =
+    typeof window !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
+  const platformEaseSpeed = isMobile ? easeSpeedFactor * 0.7 : easeSpeedFactor;
+  let lastRenderTime = 0;
+  const maxFps = isMobile ? 30 : 60;
+  const frameDuration = 1000 / maxFps;
 
   const preloadNearbyFrames = (centerIndex: number, radius: number = 2) => {
     const preloadSet = new Set<number>();
@@ -101,6 +107,9 @@ export default function Canvas({
     }
   };
 
+  const getImageUrl = (idx: number): string =>
+    workspaceItems?.[idx]?.image?.url ?? "";
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -121,9 +130,19 @@ export default function Canvas({
     camera.position.z = 10;
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: !isMobile,
+      powerPreference: "high-performance",
+    });
+    const pixelRatio = isMobile ? 1.2 : Math.min(window.devicePixelRatio, 2);
+    renderer.setPixelRatio(pixelRatio);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setSize(container.clientWidth, container.clientHeight, false);
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
+    renderer.domElement.style.display = "block";
+    renderer.domElement.style.minWidth = "768px";
+    renderer.domElement.style.display = "block";
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -134,23 +153,15 @@ export default function Canvas({
       ]);
 
       preloadIndices.forEach((idx) => {
-        if (
-          !textureCacheRef.current.has(idx) &&
-          workspaceItems[idx]?.image?.url
-        ) {
-          const tex = textureLoader.load(workspaceItems[idx].image.url, () => {
+        if (!textureCacheRef.current.has(idx) && getImageUrl(idx)) {
+          const tex = textureLoader.load(getImageUrl(idx), () => {
             loadedFramesCountRef.current++;
             if (loadedFramesCountRef.current >= preloadIndices.size) {
               setIsLoading(false);
               setTimeout(() => {
                 for (let j = 0; j < totalFrames; j++) {
-                  if (
-                    !textureCacheRef.current.has(j) &&
-                    workspaceItems[j]?.image?.url
-                  ) {
-                    const tex = textureLoader.load(
-                      workspaceItems?.[j]?.image?.url || ""
-                    );
+                  if (!textureCacheRef.current.has(j) && getImageUrl(j)) {
+                    const tex = textureLoader.load(getImageUrl(j));
                     tex.colorSpace = THREE.SRGBColorSpace;
                     textureCacheRef.current.set(j, tex);
                   }
@@ -170,7 +181,7 @@ export default function Canvas({
 
     const [planeW, planeH] = geometrySize;
     const initialTexture = textureLoader.load(
-      workspaceItems[currentFrameRef.current]?.image?.url || ""
+      getImageUrl(currentFrameRef.current)
     );
     initialTexture.colorSpace = THREE.SRGBColorSpace;
     textureCacheRef.current.set(currentFrameRef.current, initialTexture);
@@ -193,7 +204,7 @@ export default function Canvas({
         preloadNearbyFrames(targetFrameRef.current, 5);
       } else {
         const t = Math.min(distance / 10, 1);
-        const easedSpeed = easeNormalToFast(t) * easeSpeedFactor;
+        const easedSpeed = easeNormalToFast(t) * platformEaseSpeed;
         const nextFloat =
           currentFrameFloatRef.current + Math.sign(diff) * easedSpeed;
         const nextFrame = safeMod(Math.round(nextFloat), totalFrames);
@@ -206,14 +217,17 @@ export default function Canvas({
         Math.round(currentFrameFloatRef.current),
         totalFrames
       );
-      const currentTexture = textureCacheRef.current.get(displayFrame);
-      if (currentTexture?.image && meshRef.current) {
-        const mat = meshRef.current.material as THREE.MeshBasicMaterial;
-        if (mat.map !== currentTexture) {
-          mat.map = currentTexture;
-          mat.needsUpdate = true;
+
+      if (displayFrame !== currentFrameRef.current) {
+        const currentTexture = textureCacheRef.current.get(displayFrame);
+        if (currentTexture?.image && meshRef.current) {
+          const mat = meshRef.current.material as THREE.MeshBasicMaterial;
+          if (mat.map !== currentTexture) {
+            mat.map = currentTexture;
+            mat.needsUpdate = true;
+          }
+          currentFrameRef.current = displayFrame;
         }
-        currentFrameRef.current = displayFrame;
       }
 
       renderer.render(scene, camera);
@@ -225,7 +239,7 @@ export default function Canvas({
     let lastX = 0;
 
     const updateFrameFromDelta = (delta: number) => {
-      const frameChange = delta / 10;
+      const frameChange = isMobile ? delta / 18 : delta / 10;
       targetFrameRef.current += frameChange;
       lastDragDeltaRef.current = frameChange;
     };
@@ -285,18 +299,18 @@ export default function Canvas({
     canvas.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
-    canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
-    window.addEventListener("touchend", handleTouchEnd);
+    // canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
+    // window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    // window.addEventListener("touchend", handleTouchEnd);
     window.addEventListener("resize", handleResize);
 
     return () => {
       canvas.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
-      canvas.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("touchend", handleTouchEnd);
+      // canvas.removeEventListener("touchstart", handleTouchStart);
+      // window.removeEventListener("touchmove", handleTouchMove);
+      // window.removeEventListener("touchend", handleTouchEnd);
       window.removeEventListener("resize", handleResize);
       container.removeChild(renderer.domElement);
       renderer.dispose();
@@ -307,11 +321,14 @@ export default function Canvas({
     <div
       ref={containerRef}
       style={{
+        minWidth: "768px",
         width: "100%",
         height: "100vh",
         background: "#000",
         cursor: "grab",
         position: "relative",
+        overflowX: "auto",
+        overflowY: "hidden",
       }}
     >
       {isLoading && (

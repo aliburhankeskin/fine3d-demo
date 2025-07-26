@@ -1,10 +1,10 @@
 import axiosInstance from "@network/axiosInstance";
 import { OpsApiRoutes } from "@network/OpsApiRoutes";
 import getAcceptLanguage from "@helpers/Auth/getAcceptLanguage";
+import { Box } from "@mui/material";
 import { EntityTypeEnum } from "@enums/EntityTypeEnum";
 import AppLayout from "@/layout/AppLayout";
 import EtapDrawerContent from "@/layout/EtapDrawerContent";
-import MainContent from "@/layout/MainContent";
 import Canvas from "./Canvas";
 import { IPresentationInitResponse } from "@/types/IPresentationInitResponse";
 import { IBaseResponse } from "@/types/IBaseResponse";
@@ -56,7 +56,13 @@ export default async function Page({
         { params: GeneralParams, headers }
       ),
       axiosInstance.get(OpsApiRoutes.GetPresentationTabBar, {
-        params: GeneralParams,
+        params: {
+          TenantId,
+          ProjectSlug,
+          ProjectId: initData?.projectId,
+          ProjectStageId: initData?.projectId,
+          EntityType: 1,
+        },
         headers,
       }),
       axiosInstance.get(OpsApiRoutes.GetPresentationRightBar, {

@@ -2,8 +2,6 @@
 import React, { useState } from "react";
 import { Box, ButtonBase } from "@mui/material";
 
-const stages = ["Etap Görünümü", "1. Etap", "2. Etap"];
-
 const BottomFloatingBar = ({ data }: any) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const tabWidth = 125;
@@ -25,7 +23,7 @@ const BottomFloatingBar = ({ data }: any) => {
         zIndex: 10,
         px: `${horizontalPadding}px`,
         py: `${verticalPadding}px`,
-        width: tabWidth * stages.length + horizontalPadding * 2,
+        width: tabWidth * data[0]?.data.length + horizontalPadding * 2,
         height: "auto",
         overflow: "hidden",
         boxShadow: 3,
