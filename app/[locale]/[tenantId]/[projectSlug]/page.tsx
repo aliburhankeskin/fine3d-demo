@@ -1,7 +1,6 @@
 import axiosInstance from "@network/axiosInstance";
 import { OpsApiRoutes } from "@network/OpsApiRoutes";
 import getAcceptLanguage from "@helpers/Auth/getAcceptLanguage";
-import { Box } from "@mui/material";
 import { EntityTypeEnum } from "@enums/EntityTypeEnum";
 import AppLayout from "@/layout/AppLayout";
 import EtapDrawerContent from "@/layout/EtapDrawerContent";
@@ -9,6 +8,7 @@ import Canvas from "./Canvas";
 import { IPresentationInitResponse } from "@/types/IPresentationInitResponse";
 import { IBaseResponse } from "@/types/IBaseResponse";
 import { IPresentationResponse } from "@/types/IPresentationResponse";
+import CanvasWithDrawer from "./CanvasWithDrawer";
 
 export default async function Page({
   params,
@@ -75,7 +75,7 @@ export default async function Page({
     <AppLayout
       drawer={<EtapDrawerContent data={RightBarContentResponse?.data?.data} />}
     >
-      <Canvas
+      <CanvasWithDrawer
         workspaceItems={PresentationResponse?.data?.data?.tags || []}
         tabBarData={TabBarContentResponse?.data?.data}
       />

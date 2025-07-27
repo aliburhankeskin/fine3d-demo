@@ -8,6 +8,7 @@ import {
   useMediaQuery,
   useTheme,
   IconButton,
+  AppBar,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import FixedRightSideMenu from "./FixedRightSideMenu";
@@ -22,11 +23,6 @@ const drawerWidth = 320;
 const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("md"));
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  const handleDrawerToggle = () => {
-    setMobileOpen((prev) => !prev);
-  };
 
   return (
     <Stack
@@ -37,29 +33,26 @@ const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
         sx={{
           flexGrow: 1,
           position: "relative",
-          overflowX: "auto",
+          overflowY: "hidden",
           paddingRight: isSmUp ? `${60}px` : "0px",
           transition: "padding-right 0.3s ease",
         }}
       >
-        {!isSmUp && (
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ position: "absolute", top: 16, right: 16, zIndex: 1100 }}
-          >
-            <MenuIcon />
-          </IconButton>
-        )}
+        <AppBar sx={{ background: "white" }} elevation={0} position="static">
+          <Stack direction="row" alignItems="center" justifyContent="flex-end">
+            <IconButton edge="start" color="inherit" aria-label="menu">
+              <MenuIcon color="primary" />
+            </IconButton>
+          </Stack>
+          <Box sx={{ flexGrow: 1 }} />
+        </AppBar>
         {children}
       </Box>
 
       <Drawer
         variant={isSmUp ? "permanent" : "temporary"}
         anchor="right"
-        open={isSmUp || mobileOpen}
-        onClose={handleDrawerToggle}
+        open={isSmUp}
         ModalProps={{ keepMounted: true }}
         sx={{
           width: drawerWidth,

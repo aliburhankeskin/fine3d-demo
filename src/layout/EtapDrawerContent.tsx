@@ -8,7 +8,6 @@ interface EtapDrawerContentProps {
 }
 
 const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({ data }) => {
-  console.log("EtapDrawerContent data:", data);
   return (
     <Box
       sx={{

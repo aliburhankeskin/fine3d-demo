@@ -2,12 +2,12 @@
 import React from "react";
 import Image from "next/image";
 import OpsIconButton from "@components/OpsIconButton";
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import Compass from "./Compass";
 
-const TopFloatingBar = () => {
+const TopFloatingBar = ({ angleDeg }: { angleDeg: number }) => {
   return (
     <Box
       sx={{
@@ -47,9 +47,7 @@ const TopFloatingBar = () => {
         <OpsIconButton size="large" sx={{ borderRadius: "50%" }}>
           <VisibilityIcon />
         </OpsIconButton>
-        <OpsIconButton size="large" sx={{ borderRadius: "50%" }}>
-          <SwapHorizIcon />
-        </OpsIconButton>
+        <Compass angleDeg={angleDeg} />
       </Stack>
     </Box>
   );

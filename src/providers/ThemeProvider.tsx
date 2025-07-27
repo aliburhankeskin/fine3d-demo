@@ -67,7 +67,7 @@ export default function CustomThemeProvider({ children }: any) {
             height: "8px",
           },
           "::-webkit-scrollbar-thumb": {
-            backgroundColor: "#C6C6C6",
+            backgroundColor: theme.palette.primary.main,
             borderRadius: "10px",
           },
           "::-webkit-scrollbar-thumb:hover": {

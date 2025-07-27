@@ -1,21 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Box, useMediaQuery } from "@mui/material";
 import { ITagItem } from "@/types/ITagItem";
 import * as THREE from "three";
-import TopFloatingBar from "@/layout/TopFloatingBar";
-import BottomFloatingControls from "@/layout/BottomFloatingControls";
-import BottomFloatingBar from "@/layout/BottomFloatingBar";
+import TopFloatingBar from "./TopFloatingBar";
+import BottomFloatingControls from "./BottomFloatingControls";
+import BottomFloatingBar from "./BottomFloatingBar";
 
 type CanvasConfig = {
   preloadFrameCount?: number;
-  easeThreshold?: number;
-  easeStart?: number;
-  easeMultiplier?: number;
-  easeMaxSpeed?: number;
   easeSpeedFactor?: number;
   geometrySize?: [number, number];
   cameraHeight?: number;
+  startAngle?: number;
 };
 
 function safeMod(n: number, m: number): number {
@@ -26,21 +24,20 @@ export default function Canvas({
   workspaceItems = [],
   config = {},
   tabBarData,
+  canvasHeight = 300,
 }: {
   workspaceItems?: ITagItem[];
   config?: CanvasConfig;
   tabBarData?: any;
+  canvasHeight?: number;
 }) {
-  const isMobile = window.innerWidth < 768;
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const {
     preloadFrameCount = 5,
-    easeThreshold = 0.3,
-    easeStart = 0.6,
-    easeMultiplier = 1.2,
-    easeMaxSpeed = 1.15,
-    easeSpeedFactor = 0.5,
+    easeSpeedFactor = isMobile ? 0.75 : 0.5,
     geometrySize = [16, 9],
     cameraHeight = 9,
+    startAngle = 180,
   } = config;
 
   const totalFrames = workspaceItems?.length || 0;
@@ -48,6 +45,7 @@ export default function Canvas({
     ?.map((item, index) => (item?.mainFrame ? index : -1))
     .filter((i) => i >= 0) || [0];
 
+  const [angleDeg, setAngleDeg] = useState(startAngle);
   const [isLoading, setIsLoading] = useState(true);
   const loadedFramesCountRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,9 +58,6 @@ export default function Canvas({
   const targetFrameRef = useRef(mainFrameAnchors?.[0]);
   const currentFrameFloatRef = useRef(mainFrameAnchors?.[0]);
   const lastDragDeltaRef = useRef(0);
-  const easeNormalToFast = (t: number): number => {
-    return t < easeThreshold ? easeStart + t * easeMultiplier : easeMaxSpeed;
-  };
 
   const preloadNearbyFrames = (centerIndex: number, radius: number = 2) => {
     const preloadSet = new Set<number>();
@@ -126,7 +121,7 @@ export default function Canvas({
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: !isMobile, // mobilde false
+      antialias: !isMobile,
       alpha: false,
       powerPreference: "high-performance",
     });
@@ -224,6 +219,9 @@ export default function Canvas({
       }
 
       renderer.render(scene, camera);
+      const angle =
+        ((currentFrameFloatRef.current / totalFrames) * 360 + startAngle) % 360;
+      setAngleDeg(angle);
     };
 
     const preloadAllFrames = async () => {
@@ -251,10 +249,11 @@ export default function Canvas({
       animate(); // ⬅️ preload sonrası animasyon başlasın
     };
     preloadAllFrames();
-    // animate();
 
     let isDragging = false;
+    let dragStarted = false;
     let lastX = 0;
+    const dragThreshold = 20;
 
     const updateFrameFromDelta = (delta: number) => {
       const frameChange = delta / 10;
@@ -264,38 +263,59 @@ export default function Canvas({
 
     const handleMouseDown = (e: MouseEvent) => {
       isDragging = true;
+      dragStarted = false;
       lastX = e.clientX;
     };
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
+
       const delta = e.clientX - lastX;
-      lastX = e.clientX;
-      updateFrameFromDelta(delta);
+
+      if (!dragStarted && Math.abs(delta) >= dragThreshold) {
+        dragStarted = true;
+      }
+
+      if (dragStarted) {
+        lastX = e.clientX;
+        updateFrameFromDelta(delta);
+      }
     };
 
     const handleMouseUp = () => {
+      if (isDragging && dragStarted) {
+        const snap = findNextAnchorStepByDirection(
+          currentFrameFloatRef.current,
+          lastDragDeltaRef.current
+        );
+        targetFrameRef.current = snap;
+        preloadNearbyFrames(snap, 5);
+      }
+
       isDragging = false;
-      const snap = findNextAnchorStepByDirection(
-        currentFrameFloatRef.current,
-        lastDragDeltaRef.current
-      );
-      targetFrameRef.current = snap;
-      preloadNearbyFrames(snap, 5);
+      dragStarted = false;
     };
 
     const handleTouchStart = (e: TouchEvent) => {
       isDragging = true;
+      dragStarted = false;
       lastX = e.touches[0].clientX;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDragging) return;
-      const delta = e.touches[0].clientX - lastX;
-      lastX = e.touches[0].clientX;
-      updateFrameFromDelta(delta);
-    };
 
+      const delta = e.touches[0].clientX - lastX;
+
+      if (!dragStarted && Math.abs(delta) >= dragThreshold) {
+        dragStarted = true;
+      }
+
+      if (dragStarted) {
+        lastX = e.touches[0].clientX;
+        updateFrameFromDelta(delta);
+      }
+    };
     const handleTouchEnd = () => handleMouseUp();
 
     const handleResize = () => {
@@ -335,18 +355,50 @@ export default function Canvas({
     };
   }, [workspaceItems]);
 
+  const goToNextAnchor = () => {
+    const next = findNextAnchorStepByDirection(currentFrameRef.current, 1);
+    targetFrameRef.current = next;
+    preloadNearbyFrames(next, 5);
+  };
+
+  const goToPreviousAnchor = () => {
+    const prev = findNextAnchorStepByDirection(currentFrameRef.current, -1);
+    targetFrameRef.current = prev;
+    preloadNearbyFrames(prev, 5);
+  };
+
+  useEffect(() => {
+    if (!containerRef.current || !rendererRef.current || !cameraRef.current)
+      return;
+
+    const width = containerRef.current.clientWidth;
+    const height = containerRef.current.clientHeight;
+
+    const aspect = width / height;
+    const camWidth = cameraHeight * aspect;
+
+    cameraRef.current.left = -camWidth / 2;
+    cameraRef.current.right = camWidth / 2;
+    cameraRef.current.top = cameraHeight / 2;
+    cameraRef.current.bottom = -cameraHeight / 2;
+    cameraRef.current.updateProjectionMatrix();
+
+    rendererRef.current.setSize(width, height);
+  }, [canvasHeight]);
+
   return (
     <div
       ref={containerRef}
       style={{
-        minWidth: "1440px",
         width: "100%",
-        height: "100vh",
+        aspectRatio: `${geometrySize[0]}/${geometrySize[1]}`,
+        maxWidth: "100%",
         background: "#000",
         cursor: "grab",
         position: "relative",
-        overflowX: "auto",
-        overflowY: "hidden",
+        overflow: "hidden",
+        height: canvasHeight,
+        transition: "height 0.3s ease",
       }}
     >
       {isLoading && (
@@ -370,11 +422,19 @@ export default function Canvas({
           Yükleniyor...
         </div>
       )}
-      <TopFloatingBar />
 
-      <BottomFloatingControls />
+      {!isMobile && (
+        <>
+          <TopFloatingBar angleDeg={angleDeg} />
 
-      <BottomFloatingBar data={tabBarData} />
+          <BottomFloatingControls
+            onLeftClick={goToPreviousAnchor}
+            onRightClick={goToNextAnchor}
+          />
+
+          <BottomFloatingBar data={tabBarData} />
+        </>
+      )}
     </div>
   );
 }
