@@ -78,6 +78,7 @@ export default async function Page({
       <CanvasWithDrawer
         workspaceItems={PresentationResponse?.data?.data?.tags || []}
         tabBarData={TabBarContentResponse?.data?.data}
+        rightBarData={RightBarContentResponse?.data?.data}
       />
     </AppLayout>
   );

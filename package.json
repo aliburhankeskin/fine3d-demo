@@ -29,12 +29,14 @@
     "react-dom": "19.1.0",
     "react-hook-form": "^7.56.3",
     "react-redux": "^9.2.0",
+    "react-window": "^1.8.11",
     "styled-components": "^6.1.19",
     "three": "^0.178.0"
   },
   "devDependencies": {
     "@types/node": "20.4.8",
     "@types/react": "19.1.2",
+    "@types/react-window": "^1.8.8",
     "@types/three": "^0.178.1",
     "@typescript-eslint/eslint-plugin": "^6.2.1",
     "@typescript-eslint/parser": "^6.2.1",

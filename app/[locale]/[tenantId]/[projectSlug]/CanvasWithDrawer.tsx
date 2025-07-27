@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Box } from "@mui/material";
+import React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Box, Divider, Typography } from "@mui/material";
+import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import { ITagItem } from "@/types/ITagItem";
 import OriginalCanvas from "./Canvas";
 
@@ -11,15 +13,18 @@ export default function CanvasWithDrawer({
   workspaceItems,
   config,
   tabBarData,
+  rightBarData,
 }: {
   workspaceItems?: ITagItem[];
   config?: any;
   tabBarData?: any;
+  rightBarData?: any;
 }) {
   const totalHeight = typeof window !== "undefined" ? window.innerHeight : 800;
   const MAX_DRAWER_HEIGHT = totalHeight - 100;
 
   const [drawerHeight, setDrawerHeight] = useState(MIN_DRAWER_HEIGHT);
+
   const [dragging, setDragging] = useState(false);
   const startY = useRef(0);
   const startHeight = useRef(drawerHeight);
@@ -31,21 +36,25 @@ export default function CanvasWithDrawer({
     startHeight.current = drawerHeight;
   };
 
-  const handleTouchMove = (e: TouchEvent) => {
-    if (!dragging) return;
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!dragging) return;
 
-    const rawDelta = startY.current - e.touches[0].clientY;
-    const nextHeight = Math.max(
-      MIN_DRAWER_HEIGHT,
-      Math.min(MAX_DRAWER_HEIGHT, startHeight.current + rawDelta)
-    );
+      const rawDelta = startY.current - e.touches[0].clientY;
+      const slowedDelta = rawDelta * 0.8;
+      const nextHeight = Math.max(
+        MIN_DRAWER_HEIGHT,
+        Math.min(MAX_DRAWER_HEIGHT, startHeight.current + slowedDelta)
+      );
 
-    setDrawerHeight(nextHeight);
-  };
+      setDrawerHeight(nextHeight);
+    },
+    [dragging, MAX_DRAWER_HEIGHT]
+  );
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     setDragging(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (dragging) {
@@ -59,15 +68,19 @@ export default function CanvasWithDrawer({
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [dragging]);
+  }, [dragging, handleTouchMove, handleTouchEnd]);
 
   const canvasHeight = totalHeight - drawerHeight + 50;
 
   useEffect(() => {
     if (canvasRef.current) {
-      canvasRef.current.style.height = `${totalHeight - drawerHeight + 30}px`;
+      canvasRef.current.style.height = `${totalHeight - drawerHeight + 40}px`;
     }
-  }, [drawerHeight]);
+  }, [drawerHeight, totalHeight]);
+
+  // Drawer maksimum yüksekliğe geldiğinde içerik scroll edilebilsin
+  const isDrawerAtMax = drawerHeight >= MAX_DRAWER_HEIGHT - 1;
+
   return (
     <Box
       sx={{
@@ -84,6 +97,7 @@ export default function CanvasWithDrawer({
       />
 
       <Box
+        onTouchStart={handleTouchStart}
         sx={{
           position: "fixed",
           bottom: 0,
@@ -98,26 +112,29 @@ export default function CanvasWithDrawer({
           display: "flex",
           flexDirection: "column",
           transition: dragging ? "none" : "height 0.2s ease",
+          cursor: "grab",
+          touchAction: "none",
+          userSelect: "none",
         }}
       >
-        {/* Drag Handle */}
         <Box
-          onTouchStart={handleTouchStart}
           sx={{
-            height: 30,
+            height: 60,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             cursor: "grab",
             touchAction: "none",
             userSelect: "none",
+            width: "100%",
+            minHeight: 50,
           }}
         >
           <Box
             sx={{
-              width: 40,
-              height: 4,
-              borderRadius: 2,
+              width: 100,
+              height: 6,
+              borderRadius: 3,
               bgcolor: "#ccc",
             }}
           />
@@ -126,17 +143,64 @@ export default function CanvasWithDrawer({
         <Box
           sx={{
             flex: 1,
-            overflowY: "auto",
             px: 2,
             pb: 2,
             WebkitOverflowScrolling: "touch",
+            pointerEvents: isDrawerAtMax ? "auto" : "none",
           }}
         >
-          <div style={{ height: 600, backgroundColor: "#f5f5f5" }}>
-            Drawer içeriği buraya gelir...
-          </div>
+          {rightBarData && (
+            <List
+              height={drawerHeight - 40}
+              itemCount={rightBarData.length}
+              itemSize={48}
+              width={"100%"}
+              itemData={rightBarData}
+              style={{ background: "transparent" }}
+            >
+              {({ index, style, data }: ListChildComponentProps) => {
+                const item = data[index];
+                return (
+                  <div style={style} key={index}>
+                    <DrawerInfoRow
+                      label={item?.name}
+                      value={item.floor?.name}
+                    />
+                  </div>
+                );
+              }}
+            </List>
+          )}
         </Box>
       </Box>
     </Box>
   );
 }
+
+const DrawerInfoRow = React.memo(
+  ({ label, value }: { label: string; value: string }) => (
+    <>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Typography fontSize={14} color="text.secondary">
+          {label}
+        </Typography>
+        <Typography fontSize={14} fontWeight={600}>
+          {value}
+        </Typography>
+      </Box>
+      <Divider
+        sx={{
+          borderStyle: "dashed",
+        }}
+      />
+    </>
+  )
+);
+
+DrawerInfoRow.displayName = "DrawerInfoRow";

@@ -75,6 +75,7 @@ export default function Canvas({
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.minFilter = THREE.LinearFilter;
         tex.magFilter = THREE.LinearFilter;
+        tex.generateMipmaps = false;
         textureCacheRef.current.set(idx, tex);
       }
     }
@@ -123,10 +124,14 @@ export default function Canvas({
     const renderer = new THREE.WebGLRenderer({
       antialias: !isMobile,
       alpha: false,
-      powerPreference: "high-performance",
+      powerPreference: isMobile ? "default" : "high-performance",
+      preserveDrawingBuffer: false,
+      stencil: false,
+      depth: true,
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
+    renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 1.0);
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
@@ -337,18 +342,12 @@ export default function Canvas({
     canvas.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
-    // canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
-    // window.addEventListener("touchmove", handleTouchMove, { passive: true });
-    // window.addEventListener("touchend", handleTouchEnd);
     window.addEventListener("resize", handleResize);
 
     return () => {
       canvas.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
-      // canvas.removeEventListener("touchstart", handleTouchStart);
-      // window.removeEventListener("touchmove", handleTouchMove);
-      // window.removeEventListener("touchend", handleTouchEnd);
       window.removeEventListener("resize", handleResize);
       container.removeChild(renderer.domElement);
       renderer.dispose();
@@ -372,7 +371,10 @@ export default function Canvas({
       return;
 
     const width = containerRef.current.clientWidth;
-    const height = containerRef.current.clientHeight;
+    let height = containerRef.current.clientHeight;
+    const MIN_CANVAS_HEIGHT = 200;
+    if (width <= 0) return;
+    if (height < MIN_CANVAS_HEIGHT) height = MIN_CANVAS_HEIGHT;
 
     const aspect = width / height;
     const camWidth = cameraHeight * aspect;
@@ -383,22 +385,27 @@ export default function Canvas({
     cameraRef.current.bottom = -cameraHeight / 2;
     cameraRef.current.updateProjectionMatrix();
 
-    rendererRef.current.setSize(width, height);
-  }, [canvasHeight]);
+    rendererRef.current.setSize(width, height, true);
+  }, [canvasHeight, cameraHeight]);
 
   return (
     <div
       ref={containerRef}
       style={{
         width: "100%",
-        aspectRatio: `${geometrySize[0]}/${geometrySize[1]}`,
         maxWidth: "100%",
         background: "#000",
         cursor: "grab",
         position: "relative",
         overflow: "hidden",
         height: canvasHeight,
-        transition: "height 0.3s ease",
+        transition: isMobile ? "none" : "height 0.3s ease",
+        willChange: isMobile ? "auto" : "height",
+        backfaceVisibility: "hidden",
+        transform: "translateZ(0)",
+        WebkitBackfaceVisibility: "hidden",
+        WebkitTransform: "translateZ(0)",
+        touchAction: "manipulation",
       }}
     >
       {isLoading && (
