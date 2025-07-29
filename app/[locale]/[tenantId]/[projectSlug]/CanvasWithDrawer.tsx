@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Divider, Typography, useMediaQuery } from "@mui/material";
 import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import { ITagItem } from "@/types/ITagItem";
 import OriginalCanvas from "./Canvas";
@@ -20,6 +20,7 @@ export default function CanvasWithDrawer({
   tabBarData?: any;
   rightBarData?: any;
 }) {
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const totalHeight = typeof window !== "undefined" ? window.innerHeight : 800;
   const MAX_DRAWER_HEIGHT = totalHeight - 100;
 
@@ -78,7 +79,6 @@ export default function CanvasWithDrawer({
     }
   }, [drawerHeight, totalHeight]);
 
-  // Drawer maksimum yüksekliğe geldiğinde içerik scroll edilebilsin
   const isDrawerAtMax = drawerHeight >= MAX_DRAWER_HEIGHT - 1;
 
   return (
@@ -93,86 +93,88 @@ export default function CanvasWithDrawer({
         workspaceItems={workspaceItems}
         config={config}
         tabBarData={tabBarData}
-        canvasHeight={canvasHeight}
+        canvasHeight={isMobile ? canvasHeight : undefined}
       />
 
-      <Box
-        onTouchStart={handleTouchStart}
-        sx={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: `${drawerHeight}px`,
-          bgcolor: "#fff",
-          borderTopLeftRadius: 12,
-          borderTopRightRadius: 12,
-          boxShadow: "0px -2px 10px rgba(0,0,0,0.15)",
-          zIndex: 2000,
-          display: "flex",
-          flexDirection: "column",
-          transition: dragging ? "none" : "height 0.2s ease",
-          cursor: "grab",
-          touchAction: "none",
-          userSelect: "none",
-        }}
-      >
+      {isMobile && (
         <Box
+          onTouchStart={handleTouchStart}
           sx={{
-            height: 60,
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: `${drawerHeight}px`,
+            bgcolor: "#fff",
+            borderTopLeftRadius: 12,
+            borderTopRightRadius: 12,
+            boxShadow: "0px -2px 10px rgba(0,0,0,0.15)",
+            zIndex: 2000,
             display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
+            flexDirection: "column",
+            transition: dragging ? "none" : "height 0.2s ease",
             cursor: "grab",
             touchAction: "none",
             userSelect: "none",
-            width: "100%",
-            minHeight: 50,
           }}
         >
           <Box
             sx={{
-              width: 100,
-              height: 6,
-              borderRadius: 3,
-              bgcolor: "#ccc",
+              height: 60,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              cursor: "grab",
+              touchAction: "none",
+              userSelect: "none",
+              width: "100%",
+              minHeight: 50,
             }}
-          />
-        </Box>
-
-        <Box
-          sx={{
-            flex: 1,
-            px: 2,
-            pb: 2,
-            WebkitOverflowScrolling: "touch",
-            pointerEvents: isDrawerAtMax ? "auto" : "none",
-          }}
-        >
-          {rightBarData && (
-            <List
-              height={drawerHeight - 40}
-              itemCount={rightBarData.length}
-              itemSize={48}
-              width={"100%"}
-              itemData={rightBarData}
-              style={{ background: "transparent" }}
-            >
-              {({ index, style, data }: ListChildComponentProps) => {
-                const item = data[index];
-                return (
-                  <div style={style} key={index}>
-                    <DrawerInfoRow
-                      label={item?.name}
-                      value={item.floor?.name}
-                    />
-                  </div>
-                );
+          >
+            <Box
+              sx={{
+                width: 100,
+                height: 6,
+                borderRadius: 3,
+                bgcolor: "#ccc",
               }}
-            </List>
-          )}
+            />
+          </Box>
+
+          <Box
+            sx={{
+              flex: 1,
+              px: 2,
+              pb: 2,
+              WebkitOverflowScrolling: "touch",
+              pointerEvents: isDrawerAtMax ? "auto" : "none",
+            }}
+          >
+            {rightBarData && (
+              <List
+                height={drawerHeight - 40}
+                itemCount={rightBarData.length}
+                itemSize={48}
+                width={"100%"}
+                itemData={rightBarData}
+                style={{ background: "transparent" }}
+              >
+                {({ index, style, data }: ListChildComponentProps) => {
+                  const item = data[index];
+                  return (
+                    <div style={style} key={index}>
+                      <DrawerInfoRow
+                        label={item?.name}
+                        value={item.floor?.name}
+                      />
+                    </div>
+                  );
+                }}
+              </List>
+            )}
+          </Box>
         </Box>
-      </Box>
+      )}
     </Box>
   );
 }

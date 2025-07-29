@@ -23,6 +23,7 @@ const drawerWidth = 320;
 const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("md"));
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   return (
     <Stack
@@ -38,14 +39,20 @@ const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
           transition: "padding-right 0.3s ease",
         }}
       >
-        <AppBar sx={{ background: "white" }} elevation={0} position="static">
-          <Stack direction="row" alignItems="center" justifyContent="flex-end">
-            <IconButton edge="start" color="inherit" aria-label="menu">
-              <MenuIcon color="primary" />
-            </IconButton>
-          </Stack>
-          <Box sx={{ flexGrow: 1 }} />
-        </AppBar>
+        {isMobile && (
+          <AppBar sx={{ background: "white" }} elevation={0} position="static">
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="flex-end"
+            >
+              <IconButton edge="start" color="inherit" aria-label="menu">
+                <MenuIcon color="primary" />
+              </IconButton>
+            </Stack>
+            <Box sx={{ flexGrow: 1 }} />
+          </AppBar>
+        )}
         {children}
       </Box>
 

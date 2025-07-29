@@ -24,7 +24,7 @@ export default function Canvas({
   workspaceItems = [],
   config = {},
   tabBarData,
-  canvasHeight = 300,
+  canvasHeight,
 }: {
   workspaceItems?: ITagItem[];
   config?: CanvasConfig;
@@ -34,7 +34,7 @@ export default function Canvas({
   const isMobile = useMediaQuery("(max-width: 768px)");
   const {
     preloadFrameCount = 5,
-    easeSpeedFactor = isMobile ? 0.75 : 0.5,
+    easeSpeedFactor = isMobile ? 1 : 0.25,
     geometrySize = [16, 9],
     cameraHeight = 9,
     startAngle = 180,
@@ -343,12 +343,18 @@ export default function Canvas({
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
     window.addEventListener("resize", handleResize);
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd);
 
     return () => {
       canvas.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
       window.removeEventListener("resize", handleResize);
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
       container.removeChild(renderer.domElement);
       renderer.dispose();
     };
@@ -367,7 +373,12 @@ export default function Canvas({
   };
 
   useEffect(() => {
-    if (!containerRef.current || !rendererRef.current || !cameraRef.current)
+    if (
+      !containerRef.current ||
+      !rendererRef.current ||
+      !cameraRef.current ||
+      !isMobile
+    )
       return;
 
     const width = containerRef.current.clientWidth;
@@ -398,7 +409,7 @@ export default function Canvas({
         cursor: "grab",
         position: "relative",
         overflow: "hidden",
-        height: canvasHeight,
+        height: canvasHeight || "100%",
         transition: isMobile ? "none" : "height 0.3s ease",
         willChange: isMobile ? "auto" : "height",
         backfaceVisibility: "hidden",
@@ -430,14 +441,14 @@ export default function Canvas({
         </div>
       )}
 
+      <BottomFloatingControls
+        onLeftClick={goToPreviousAnchor}
+        onRightClick={goToNextAnchor}
+      />
+
       {!isMobile && (
         <>
           <TopFloatingBar angleDeg={angleDeg} />
-
-          <BottomFloatingControls
-            onLeftClick={goToPreviousAnchor}
-            onRightClick={goToNextAnchor}
-          />
 
           <BottomFloatingBar data={tabBarData} />
         </>

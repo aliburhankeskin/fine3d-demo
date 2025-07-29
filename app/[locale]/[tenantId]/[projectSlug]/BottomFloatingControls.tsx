@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import OpsIconButton from "@components/OpsIconButton";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 
@@ -14,11 +14,12 @@ const BottomFloatingControls: React.FC<BottomFloatingControlsProps> = ({
   onLeftClick,
   onRightClick,
 }) => {
+  const isMobile = useMediaQuery("(max-width: 768px)");
   return (
     <Box
       sx={{
         position: "absolute",
-        bottom: 30,
+        bottom: isMobile ? 100 : 30,
         left: 0,
         width: "100%",
         display: "flex",
@@ -29,7 +30,7 @@ const BottomFloatingControls: React.FC<BottomFloatingControlsProps> = ({
       }}
     >
       <OpsIconButton
-        size="large"
+        size={isMobile ? "small" : "large"}
         onClick={onLeftClick}
         sx={{
           borderRadius: "50%",
@@ -40,7 +41,7 @@ const BottomFloatingControls: React.FC<BottomFloatingControlsProps> = ({
       </OpsIconButton>
 
       <OpsIconButton
-        size="large"
+        size={isMobile ? "small" : "large"}
         onClick={onRightClick}
         sx={{
           borderRadius: "50%",
