@@ -4,7 +4,6 @@ import getAcceptLanguage from "@helpers/Auth/getAcceptLanguage";
 import { EntityTypeEnum } from "@enums/EntityTypeEnum";
 import AppLayout from "@/layout/AppLayout";
 import EtapDrawerContent from "./EtapDrawerContent";
-import Canvas from "./Canvas";
 import { IPresentationInitResponse } from "@/types/IPresentationInitResponse";
 import { IBaseResponse } from "@/types/IBaseResponse";
 import { IPresentationResponse } from "@/types/IPresentationResponse";
@@ -84,7 +83,7 @@ export default async function Page({
         initResponse={PresentationInitResponse?.data?.data}
         presentationData={PresentationResponse?.data?.data}
         tabBarData={TabBarContentResponse?.data?.data}
-        rightBarData={RightBarContentResponse?.data?.data}
+        units={RightBarContentResponse?.data?.data}
       />
     </AppLayout>
   );

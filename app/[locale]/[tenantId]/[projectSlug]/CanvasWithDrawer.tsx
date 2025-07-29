@@ -2,9 +2,9 @@
 
 import React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Box, Divider, Typography, useMediaQuery } from "@mui/material";
-import { FixedSizeList as List, ListChildComponentProps } from "react-window";
+import { Box, useMediaQuery } from "@mui/material";
 import OriginalCanvas from "./Canvas";
+import EtapDrawerContent from "./EtapDrawerContent";
 
 const MIN_DRAWER_HEIGHT = 100;
 
@@ -12,13 +12,13 @@ export default function CanvasWithDrawer({
   presentationData,
   config,
   tabBarData,
-  rightBarData,
+  units,
   initResponse,
 }: {
   presentationData?: any;
   config?: any;
   tabBarData?: any;
-  rightBarData?: any;
+  units?: any;
   initResponse?: any;
 }) {
   const workspaceItems = presentationData?.tags || [];
@@ -34,6 +34,7 @@ export default function CanvasWithDrawer({
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation(); // Event bubbling'i durdur
     setDragging(true);
     startY.current = e.touches[0].clientY;
     startHeight.current = drawerHeight;
@@ -43,6 +44,7 @@ export default function CanvasWithDrawer({
     (e: TouchEvent) => {
       if (!dragging) return;
 
+      e.preventDefault(); // Default davranışı engelle
       const rawDelta = startY.current - e.touches[0].clientY;
       const slowedDelta = rawDelta * 0.8;
       const nextHeight = Math.max(
@@ -62,7 +64,7 @@ export default function CanvasWithDrawer({
   useEffect(() => {
     if (dragging) {
       window.addEventListener("touchmove", handleTouchMove, { passive: false });
-      window.addEventListener("touchend", handleTouchEnd);
+      window.addEventListener("touchend", handleTouchEnd, { passive: true });
     } else {
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
@@ -81,8 +83,6 @@ export default function CanvasWithDrawer({
     }
   }, [drawerHeight, totalHeight]);
 
-  const isDrawerAtMax = drawerHeight >= MAX_DRAWER_HEIGHT - 1;
-
   return (
     <Box
       sx={{
@@ -100,7 +100,6 @@ export default function CanvasWithDrawer({
 
       {isMobile && (
         <Box
-          onTouchStart={handleTouchStart}
           sx={{
             position: "fixed",
             bottom: 0,
@@ -115,14 +114,12 @@ export default function CanvasWithDrawer({
             display: "flex",
             flexDirection: "column",
             transition: dragging ? "none" : "height 0.2s ease",
-            cursor: "grab",
-            touchAction: "none",
-            userSelect: "none",
           }}
         >
           <Box
+            onTouchStart={handleTouchStart}
             sx={{
-              height: 60,
+              height: 40,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
@@ -130,7 +127,8 @@ export default function CanvasWithDrawer({
               touchAction: "none",
               userSelect: "none",
               width: "100%",
-              minHeight: 50,
+              minHeight: 40,
+              flexShrink: 0,
             }}
           >
             <Box
@@ -146,65 +144,16 @@ export default function CanvasWithDrawer({
           <Box
             sx={{
               flex: 1,
-              px: 2,
-              pb: 2,
+              overflow: "auto",
               WebkitOverflowScrolling: "touch",
-              pointerEvents: isDrawerAtMax ? "auto" : "none",
+              pointerEvents: "auto",
+              touchAction: "auto",
             }}
           >
-            {rightBarData && (
-              <List
-                height={drawerHeight - 40}
-                itemCount={rightBarData.length}
-                itemSize={48}
-                width={"100%"}
-                itemData={rightBarData}
-                style={{ background: "transparent" }}
-              >
-                {({ index, style, data }: ListChildComponentProps) => {
-                  const item = data[index];
-                  return (
-                    <div style={style} key={index}>
-                      <DrawerInfoRow
-                        label={item?.name}
-                        value={item.floor?.name}
-                      />
-                    </div>
-                  );
-                }}
-              </List>
-            )}
+            <EtapDrawerContent units={units} initResponse={initResponse} />
           </Box>
         </Box>
       )}
     </Box>
   );
 }
-
-const DrawerInfoRow = React.memo(
-  ({ label, value }: { label: string; value: string }) => (
-    <>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Typography fontSize={14} color="text.secondary">
-          {label}
-        </Typography>
-        <Typography fontSize={14} fontWeight={600}>
-          {value}
-        </Typography>
-      </Box>
-      <Divider
-        sx={{
-          borderStyle: "dashed",
-        }}
-      />
-    </>
-  )
-);
-
-DrawerInfoRow.displayName = "DrawerInfoRow";

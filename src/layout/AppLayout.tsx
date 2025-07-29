@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   Box,
   Stack,
@@ -40,14 +41,22 @@ const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
         }}
       >
         {isMobile && (
-          <AppBar sx={{ background: "white" }} elevation={0} position="static">
+          <AppBar sx={{ background: "transparent" }} elevation={0}>
             <Stack
               direction="row"
               alignItems="center"
-              justifyContent="flex-end"
+              justifyContent="space-between"
+              sx={{ padding: "0 16px" }}
             >
+              <Image
+                src="/logo-big.svg"
+                alt="Logo"
+                width={50}
+                height={50}
+                priority
+              />
               <IconButton edge="start" color="inherit" aria-label="menu">
-                <MenuIcon color="primary" />
+                <MenuIcon color="inherit" />
               </IconButton>
             </Stack>
             <Box sx={{ flexGrow: 1 }} />
@@ -69,6 +78,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
             boxSizing: "border-box",
             borderLeft: "1px solid #ddd",
             marginRight: "60px",
+            overflow: "hidden",
           },
         }}
       >

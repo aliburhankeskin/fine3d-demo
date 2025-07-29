@@ -20,6 +20,8 @@ function safeMod(n: number, m: number): number {
   return ((n % m) + m) % m;
 }
 
+const MIN_CANVAS_HEIGHT = 250;
+
 export default function Canvas({
   workspaceItems = [],
   config = {},
@@ -34,7 +36,7 @@ export default function Canvas({
   const isMobile = useMediaQuery("(max-width: 768px)");
   const {
     preloadFrameCount = 5,
-    easeSpeedFactor = isMobile ? 1 : 0.25,
+    easeSpeedFactor = isMobile ? 0.5 : 0.25,
     geometrySize = [16, 9],
     cameraHeight = 9,
     startAngle = 180,
@@ -109,6 +111,7 @@ export default function Canvas({
     const aspect = container.clientWidth / container.clientHeight;
     const height = cameraHeight;
     const width = height * aspect;
+    const textureCache = textureCacheRef.current;
 
     const camera = new THREE.OrthographicCamera(
       -width / 2,
@@ -124,10 +127,10 @@ export default function Canvas({
     const renderer = new THREE.WebGLRenderer({
       antialias: !isMobile,
       alpha: false,
-      powerPreference: isMobile ? "default" : "high-performance",
+      powerPreference: "high-performance",
       preserveDrawingBuffer: false,
       stencil: false,
-      depth: true,
+      depth: false,
     });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
@@ -194,7 +197,8 @@ export default function Canvas({
       }
 
       const direction = Math.sign(diff);
-      if (Math.abs(diff) >= 0.01) {
+      if (Math.abs(diff) >= 0.001) {
+        // Daha hassas threshold
         const nextFloat =
           currentFrameFloatRef.current + direction * easeSpeedFactor;
         const nextFrame = safeMod(Math.round(nextFloat), totalFrames);
@@ -241,6 +245,8 @@ export default function Canvas({
               tex.minFilter = THREE.LinearFilter;
               tex.magFilter = THREE.LinearFilter;
               tex.generateMipmaps = false;
+              tex.wrapS = THREE.ClampToEdgeWrapping;
+              tex.wrapT = THREE.ClampToEdgeWrapping;
               textureCacheRef.current.set(i, tex);
               resolve();
             });
@@ -261,7 +267,7 @@ export default function Canvas({
     const dragThreshold = 20;
 
     const updateFrameFromDelta = (delta: number) => {
-      const frameChange = delta / 10;
+      const frameChange = delta / (isMobile ? 12 : 15); // Daha yumuşak drag
       targetFrameRef.current += frameChange;
       lastDragDeltaRef.current = frameChange;
     };
@@ -355,6 +361,20 @@ export default function Canvas({
       canvas.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+
+      // Texture'ları temizle
+      textureCache.forEach((texture) => {
+        texture.dispose();
+      });
+      textureCache.clear();
+
+      if (meshRef.current) {
+        meshRef.current.geometry.dispose();
+        if (meshRef.current.material instanceof THREE.Material) {
+          meshRef.current.material.dispose();
+        }
+      }
+
       container.removeChild(renderer.domElement);
       renderer.dispose();
     };
@@ -383,7 +403,6 @@ export default function Canvas({
 
     const width = containerRef.current.clientWidth;
     let height = containerRef.current.clientHeight;
-    const MIN_CANVAS_HEIGHT = 200;
     if (width <= 0) return;
     if (height < MIN_CANVAS_HEIGHT) height = MIN_CANVAS_HEIGHT;
 
@@ -409,6 +428,7 @@ export default function Canvas({
         cursor: "grab",
         position: "relative",
         overflow: "hidden",
+        minHeight: isMobile ? `${MIN_CANVAS_HEIGHT}px` : "auto",
         height: canvasHeight || "100%",
         transition: isMobile ? "none" : "height 0.3s ease",
         willChange: isMobile ? "auto" : "height",

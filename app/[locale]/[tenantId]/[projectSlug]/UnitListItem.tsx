@@ -2,7 +2,14 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Box, Card, IconButton, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  IconButton,
+  Stack,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { IUnitTemplate } from "../../../../src/types/IUnitTemplate";
@@ -10,6 +17,7 @@ import { IUnitType } from "../../../../src/types/IUnitType";
 
 const UnitListItem = ({ index, style, data }: any) => {
   const t = useTranslations("Common");
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const {
     items,
     viewMode,
@@ -232,11 +240,11 @@ const UnitListItem = ({ index, style, data }: any) => {
   // List view
   return (
     <div style={style}>
-      <Box sx={{ px: 2 }}>
+      <Box sx={{ px: { xs: 1, md: 2 } }}>
         <Box
           sx={{
-            py: 1,
-            height: "58px",
+            py: { xs: 0.5, md: 1 },
+            height: { xs: "50px", md: "58px" },
             display: "flex",
             alignItems: "center",
             borderBottom: "1px dashed",
@@ -256,48 +264,66 @@ const UnitListItem = ({ index, style, data }: any) => {
             <Stack
               direction="row"
               alignItems="center"
-              spacing={0.5}
-              sx={{ flex: 1 }}
+              sx={{ flex: 1, width: "100%" }}
             >
-              <Box sx={{ minWidth: 40, textAlign: "center" }}>
-                <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+              <Box sx={{ flex: isMobile ? 0.8 : 1, textAlign: "center" }}>
+                <Typography
+                  variant="body2"
+                  sx={{ fontSize: { xs: "0.75rem", md: "0.8rem" } }}
+                >
                   {safeFloor}
                 </Typography>
               </Box>
 
-              <Box sx={{ minWidth: 50, textAlign: "center" }}>
-                <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
-                  {safeRoomCount}
+              <Box sx={{ flex: isMobile ? 1.2 : 1.5, textAlign: "center" }}>
+                <Typography
+                  variant="body2"
+                  sx={{ fontSize: { xs: "0.75rem", md: "0.8rem" } }}
+                  noWrap
+                >
+                  {isMobile ? safeRoomCount.slice(0, 3) : safeRoomCount}
                 </Typography>
               </Box>
 
-              <Box sx={{ minWidth: 50, textAlign: "center" }}>
-                <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+              <Box sx={{ flex: 1, textAlign: "center" }}>
+                <Typography
+                  variant="body2"
+                  sx={{ fontSize: { xs: "0.75rem", md: "0.8rem" } }}
+                >
                   {getNetAreaFromTemplate(unit)}
                 </Typography>
               </Box>
 
-              <Box sx={{ minWidth: 50, textAlign: "center" }}>
-                <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+              <Box sx={{ flex: 1, textAlign: "center" }}>
+                <Typography
+                  variant="body2"
+                  sx={{ fontSize: { xs: "0.75rem", md: "0.8rem" } }}
+                >
                   {getGrossAreaFromTemplate(unit)}
                 </Typography>
               </Box>
 
-              <Box sx={{ minWidth: 60, textAlign: "center" }}>
-                <Typography variant="body2" sx={{ fontSize: "0.75rem" }}>
-                  {safeFacadeDirection}
+              <Box sx={{ flex: isMobile ? 0.8 : 1.5, textAlign: "center" }}>
+                <Typography
+                  variant="body2"
+                  sx={{ fontSize: { xs: "0.7rem", md: "0.75rem" } }}
+                  noWrap
+                >
+                  {isMobile ? "Fa" : safeFacadeDirection}
                 </Typography>
               </Box>
 
-              <Box sx={{ minWidth: 40, textAlign: "center" }}>
-                <Typography variant="body2" sx={{ fontSize: "0.75rem" }}>
-                  -
-                </Typography>
-              </Box>
+              {!isMobile && ( // Desktop'ta ekstra sütun
+                <Box sx={{ flex: 0.8, textAlign: "center" }}>
+                  <Typography variant="body2" sx={{ fontSize: "0.75rem" }}>
+                    -
+                  </Typography>
+                </Box>
+              )}
             </Stack>
 
             <IconButton
-              size="small"
+              size={isMobile ? "small" : "small"}
               onClick={() => toggleFavorite(index)}
               sx={{
                 color: isFavorite ? "error.main" : "grey.400",
@@ -305,9 +331,14 @@ const UnitListItem = ({ index, style, data }: any) => {
                   color: "error.main",
                   transform: "scale(1.1)",
                 },
+                p: { xs: 0.5, md: 1 },
               }}
             >
-              {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              {isFavorite ? (
+                <FavoriteIcon fontSize={isMobile ? "small" : "medium"} />
+              ) : (
+                <FavoriteBorderIcon fontSize={isMobile ? "small" : "medium"} />
+              )}
             </IconButton>
           </Stack>
         </Box>

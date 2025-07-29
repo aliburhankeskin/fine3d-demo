@@ -9,6 +9,7 @@ import {
   IconButton,
   Stack,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
@@ -45,6 +46,7 @@ const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
   units = [],
 }) => {
   const t = useTranslations("Common");
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [filters, setFilters] = useState<FilterValues>({
     roomCount: [],
@@ -324,91 +326,115 @@ const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
         </ButtonGroup>
       </Stack>
 
-      <Box sx={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
+      <Box sx={{ flex: 1, overflow: "visible", minHeight: 0 }}>
         {viewMode === "list" && (
           <Box
             sx={{
-              px: 2,
-              py: 1,
+              px: { xs: 1, md: 2 },
+              py: { xs: 0.5, md: 1 },
               borderBottom: "1px solid",
               borderColor: "grey.300",
             }}
           >
-            <Stack direction="row" alignItems="center" spacing={0.5}>
-              <Box sx={{ minWidth: 40, textAlign: "center" }}>
+            <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+              <Box sx={{ flex: isMobile ? 0.8 : 1, textAlign: "center" }}>
                 <Typography
                   variant="body2"
                   fontWeight={600}
                   color="text.secondary"
+                  sx={{ fontSize: { xs: "0.7rem", md: "0.875rem" } }}
                 >
                   {t("Floor")}
                 </Typography>
               </Box>
 
-              <Box sx={{ minWidth: 50, textAlign: "center" }}>
+              <Box sx={{ flex: isMobile ? 1.2 : 1.5, textAlign: "center" }}>
                 <Typography
                   variant="body2"
                   fontWeight={600}
                   color="text.secondary"
+                  sx={{ fontSize: { xs: "0.7rem", md: "0.875rem" } }}
                 >
-                  {t("Room")}
+                  {isMobile ? t("Room").slice(0, 3) : t("Room")}
                 </Typography>
               </Box>
 
-              <Box sx={{ minWidth: 50, textAlign: "center" }}>
+              <Box sx={{ flex: 1, textAlign: "center" }}>
                 <Typography
                   variant="body2"
                   fontWeight={600}
                   color="text.secondary"
+                  sx={{ fontSize: { xs: "0.7rem", md: "0.875rem" } }}
                 >
                   {t("Net")}
                 </Typography>
               </Box>
 
-              <Box sx={{ minWidth: 50, textAlign: "center" }}>
+              <Box sx={{ flex: 1, textAlign: "center" }}>
                 <Typography
                   variant="body2"
                   fontWeight={600}
                   color="text.secondary"
+                  sx={{ fontSize: { xs: "0.7rem", md: "0.875rem" } }}
                 >
                   {t("Gross")}
                 </Typography>
               </Box>
 
-              <Box sx={{ minWidth: 60, textAlign: "center" }}>
+              <Box sx={{ flex: isMobile ? 0.8 : 1.5, textAlign: "center" }}>
                 <Typography
                   variant="body2"
                   fontWeight={600}
                   color="text.secondary"
+                  sx={{ fontSize: { xs: "0.65rem", md: "0.875rem" } }}
                 >
-                  {t("Facade")}
+                  {isMobile ? "Fa" : t("Facade")}
                 </Typography>
               </Box>
 
-              <Box sx={{ minWidth: 40, textAlign: "center" }}>
+              {!isMobile && ( // Desktop'ta ekstra sütun
+                <Box sx={{ flex: 0.8, textAlign: "center" }}>
+                  <Typography
+                    variant="body2"
+                    fontWeight={600}
+                    color="text.secondary"
+                    sx={{ fontSize: "0.875rem" }}
+                  >
+                    -
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Kalp ikonu için boşluk */}
+              <Box sx={{ width: { xs: 32, md: 40 }, textAlign: "center" }}>
                 <Typography
                   variant="body2"
                   fontWeight={600}
                   color="text.secondary"
+                  sx={{ fontSize: { xs: "0.65rem", md: "0.875rem" } }}
                 >
-                  -
+                  ♡
                 </Typography>
               </Box>
             </Stack>
           </Box>
         )}
-
         <List
           height={
-            typeof window !== "undefined" && window.innerHeight
+            isMobile
               ? Math.max(
+                  300,
+                  (filteredData.length || 0) *
+                    (viewMode === "card" ? 170 : 55) +
+                    50
+                ) // Mobile: minimum height garantisi
+              : Math.max(
                   400,
                   window.innerHeight - (viewMode === "list" ? 240 : 200)
-                )
-              : 600
+                ) // Desktop: fixed height with scroll
           }
           width="100%"
-          itemCount={(filteredData.length || 0) + 2}
+          itemCount={(filteredData.length || 0) + (isMobile ? 1 : 2)}
           itemSize={viewMode === "card" ? 200 : 60}
           itemData={{
             items: filteredData.length ? filteredData : [],
@@ -420,6 +446,7 @@ const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
             getGrossArea,
           }}
           style={{
+            overflow: isMobile ? "visible" : "auto", // Mobile'da scroll yok
             scrollbarWidth: "thin",
             scrollbarColor: "#2F3D5E transparent",
           }}
