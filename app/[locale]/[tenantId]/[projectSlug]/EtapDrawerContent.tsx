@@ -109,7 +109,6 @@ const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
 
   const getFacadeDirection = useCallback(
     (unit: IUnitTemplate): string => {
-      // facades array'inden direction çıkar
       if (unit.facades && unit.facades.length > 0) {
         const facade = unit.facades[0];
         const facadeMap: { [key: number]: string } = {
@@ -420,6 +419,52 @@ const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
             getNetArea,
             getGrossArea,
           }}
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: "#2F3D5E transparent",
+          }}
+          outerElementType={({ children, ...props }) => (
+            <div
+              {...props}
+              style={{
+                ...props.style,
+                "&::-webkit-scrollbar": {
+                  width: "6px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  background: "transparent",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#2F3D5E",
+                  borderRadius: "3px",
+                },
+                "&::-webkit-scrollbar-thumb:hover": {
+                  backgroundColor: "#243147",
+                },
+              }}
+              sx={{
+                "& ::-webkit-scrollbar": {
+                  width: "6px",
+                },
+                "& ::-webkit-scrollbar-track": {
+                  background: "transparent",
+                },
+                "& ::-webkit-scrollbar-thumb": {
+                  backgroundColor: "primary.main", // #2F3D5E
+                  borderRadius: "3px",
+                  "&:hover": {
+                    backgroundColor: "primary.dark",
+                  },
+                },
+                "& *": {
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "primary.main transparent",
+                },
+              }}
+            >
+              {children}
+            </div>
+          )}
         >
           {UnitListItem}
         </List>

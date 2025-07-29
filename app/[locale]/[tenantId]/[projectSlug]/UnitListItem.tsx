@@ -1,14 +1,8 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
-import {
-  Box,
-  Card,
-  CardMedia,
-  IconButton,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Card, IconButton, Stack, Typography } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { IUnitTemplate } from "../../../../src/types/IUnitTemplate";
@@ -26,7 +20,14 @@ const UnitListItem = ({ index, style, data }: any) => {
     getGrossArea,
   } = data;
 
-  // Son item için boş padding alanı
+  const [imageError, setImageError] = React.useState(false);
+  const unit: IUnitTemplate = items[index];
+  const isFavorite = favoriteItems.has(index);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [unit?.image?.url]);
+
   if (index >= items.length) {
     return (
       <div style={style}>
@@ -34,9 +35,6 @@ const UnitListItem = ({ index, style, data }: any) => {
       </div>
     );
   }
-
-  const unit: IUnitTemplate = items[index];
-  const isFavorite = favoriteItems.has(index);
 
   if (!unit || typeof unit !== "object" || !unit.name) {
     return (
@@ -118,20 +116,34 @@ const UnitListItem = ({ index, style, data }: any) => {
             }}
           >
             <Stack direction="row" spacing={2} sx={{ p: 2, height: "100%" }}>
-              <CardMedia
-                component="img"
+              <Box
                 sx={{
                   width: 150,
                   height: 150,
                   borderRadius: 3,
-                  objectFit: "contain",
                   bgcolor: "white",
                   flexShrink: 0,
                   p: 2,
+                  position: "relative",
+                  overflow: "hidden",
                 }}
-                image={unit.image?.url || "/placeholder.png"}
-                alt={`Unit ${safeUnitName} floor plan`}
-              />
+              >
+                <Image
+                  src={
+                    imageError
+                      ? "/placeholder.png"
+                      : unit.image?.url || "/placeholder.png"
+                  }
+                  alt={`Unit ${safeUnitName} floor plan`}
+                  fill
+                  style={{
+                    objectFit: "contain",
+                  }}
+                  sizes="(max-width: 768px) 100vw, 150px"
+                  priority={index < 5} // İlk 5 resmi öncelikli yükle
+                  onError={() => setImageError(true)}
+                />
+              </Box>
 
               {/* Unit Info */}
               <Stack spacing={1} sx={{ flex: 1 }}>
