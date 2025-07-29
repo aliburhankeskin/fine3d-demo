@@ -18,7 +18,7 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-const drawerWidth = 320;
+const drawerWidth = 400;
 
 const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
   const theme = useTheme();

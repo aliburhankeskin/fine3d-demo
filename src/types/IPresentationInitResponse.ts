@@ -1,18 +1,20 @@
+"use client";
+import { IUnitState } from "./IUnitState";
+import { IUnitTemplate } from "./IUnitTemplate";
+import { IUnitType } from "./IUnitType";
+
 export interface IPresentationInitResponse {
-  startingEntity: string; // örn: "0 -> Project"
+  startingEntity: number;
   projectId: number;
-  projectName: string | null;
-  projectSlogan: string | null;
-  startMode: string; // örn: "1 -> DayLight"
-  themeObject: any | null; // tip bilinmiyor, detay verirsen güncelleyebilirim
-  companyName: string | null;
-  companyLogo: {
-    id: number | null;
-    url: string | null;
-    filePath: string | null;
-    fileName: string | null;
-    fileVersion: number;
-    order: number;
-    altText: string | null;
-  };
+  projectName: string;
+  projectSlogan: string;
+  startMode: number;
+  themeObject: any;
+  canvasConfig: any;
+  compassInitialDegree: any;
+  companyName: string;
+  unitStates: IUnitState[];
+  unitTemplates: IUnitTemplate[];
+  unitTypes: IUnitType[];
+  companyLogo: any;
 }

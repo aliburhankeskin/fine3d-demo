@@ -3,7 +3,7 @@ import { OpsApiRoutes } from "@network/OpsApiRoutes";
 import getAcceptLanguage from "@helpers/Auth/getAcceptLanguage";
 import { EntityTypeEnum } from "@enums/EntityTypeEnum";
 import AppLayout from "@/layout/AppLayout";
-import EtapDrawerContent from "@/layout/EtapDrawerContent";
+import EtapDrawerContent from "./EtapDrawerContent";
 import Canvas from "./Canvas";
 import { IPresentationInitResponse } from "@/types/IPresentationInitResponse";
 import { IBaseResponse } from "@/types/IBaseResponse";
@@ -73,10 +73,16 @@ export default async function Page({
 
   return (
     <AppLayout
-      drawer={<EtapDrawerContent data={RightBarContentResponse?.data?.data} />}
+      drawer={
+        <EtapDrawerContent
+          units={RightBarContentResponse?.data?.data}
+          initResponse={PresentationInitResponse?.data?.data as any}
+        />
+      }
     >
       <CanvasWithDrawer
-        workspaceItems={PresentationResponse?.data?.data?.tags || []}
+        initResponse={PresentationInitResponse?.data?.data}
+        presentationData={PresentationResponse?.data?.data}
         tabBarData={TabBarContentResponse?.data?.data}
         rightBarData={RightBarContentResponse?.data?.data}
       />

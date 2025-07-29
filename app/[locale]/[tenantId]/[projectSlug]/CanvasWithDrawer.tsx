@@ -4,22 +4,24 @@ import React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Divider, Typography, useMediaQuery } from "@mui/material";
 import { FixedSizeList as List, ListChildComponentProps } from "react-window";
-import { ITagItem } from "@/types/ITagItem";
 import OriginalCanvas from "./Canvas";
 
 const MIN_DRAWER_HEIGHT = 100;
 
 export default function CanvasWithDrawer({
-  workspaceItems,
+  presentationData,
   config,
   tabBarData,
   rightBarData,
+  initResponse,
 }: {
-  workspaceItems?: ITagItem[];
+  presentationData?: any;
   config?: any;
   tabBarData?: any;
   rightBarData?: any;
+  initResponse?: any;
 }) {
+  const workspaceItems = presentationData?.tags || [];
   const isMobile = useMediaQuery("(max-width: 768px)");
   const totalHeight = typeof window !== "undefined" ? window.innerHeight : 800;
   const MAX_DRAWER_HEIGHT = totalHeight - 100;
