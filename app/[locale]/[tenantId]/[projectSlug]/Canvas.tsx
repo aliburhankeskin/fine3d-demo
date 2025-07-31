@@ -12,7 +12,6 @@ import PolygonOverlay from "./PolygonOverlay";
 
 type CanvasConfig = {
   preloadFrameCount?: number;
-  easeSpeedFactor?: number;
   geometrySize?: [number, number];
   cameraHeight?: number;
   startAngle?: number;
@@ -40,7 +39,6 @@ export default function Canvas({
   const isMobile = useMediaQuery("(max-width: 768px)");
   const {
     preloadFrameCount = 5,
-    easeSpeedFactor = isMobile ? 0.5 : 0.25,
     geometrySize = [16, 9],
     cameraHeight = 9,
     startAngle = 180,
@@ -199,50 +197,53 @@ export default function Canvas({
     meshRef.current = mesh;
     scene.add(mesh);
 
+    const clock = new THREE.Clock();
+    const baseSpeed = isMobile ? 0.6 : 0.7;
+    let animationId: number;
+
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
+
+      const deltaTime = Math.min(clock.getDelta(), 0.1);
+      const frameMultiplier = Math.max(1, deltaTime * 60);
 
       let diff = targetFrameRef.current - currentFrameFloatRef.current;
       if (Math.abs(diff) > totalFrames / 2) {
         diff = diff > 0 ? diff - totalFrames : diff + totalFrames;
       }
 
-      const direction = Math.sign(diff);
-      if (Math.abs(diff) >= 0.001) {
-        // Daha hassas threshold
-        const nextFloat =
-          currentFrameFloatRef.current + direction * easeSpeedFactor;
-        const nextFrame = safeMod(Math.round(nextFloat), totalFrames);
-        const nextTexture = textureCacheRef.current.get(nextFrame);
+      if (Math.abs(diff) >= 0.005) {
+        const moveAmount = baseSpeed * frameMultiplier * Math.sign(diff);
 
-        if (
-          nextTexture?.image?.complete &&
-          nextTexture.image.naturalWidth > 0
-        ) {
-          currentFrameFloatRef.current = nextFloat;
+        if (Math.abs(diff) <= Math.abs(moveAmount)) {
+          currentFrameFloatRef.current = targetFrameRef.current;
+        } else {
+          currentFrameFloatRef.current += moveAmount;
         }
-      }
 
-      const displayFrame = safeMod(
-        Math.round(currentFrameFloatRef.current),
-        totalFrames
-      );
+        const displayFrame = safeMod(
+          Math.round(currentFrameFloatRef.current),
+          totalFrames
+        );
 
-      const currentTexture = textureCacheRef.current.get(displayFrame);
-      if (currentTexture?.image && meshRef.current) {
-        const mat = meshRef.current.material as THREE.MeshBasicMaterial;
-        if (mat.map !== currentTexture) {
-          mat.map = currentTexture;
-          mat.needsUpdate = true;
+        const currentTexture = textureCacheRef.current.get(displayFrame);
+        if (currentTexture?.image && meshRef.current) {
+          const mat = meshRef.current.material as THREE.MeshBasicMaterial;
+          if (mat.map !== currentTexture) {
+            mat.map = currentTexture;
+            mat.needsUpdate = true;
+          }
+          currentFrameRef.current = displayFrame;
+          setCurrentDisplayFrame(displayFrame);
         }
-        currentFrameRef.current = displayFrame;
-        setCurrentDisplayFrame(displayFrame); // State'i güncelle
+
+        const angle =
+          ((currentFrameFloatRef.current / totalFrames) * 360 + startAngle) %
+          360;
+        setAngleDeg(angle);
       }
 
       renderer.render(scene, camera);
-      const angle =
-        ((currentFrameFloatRef.current / totalFrames) * 360 + startAngle) % 360;
-      setAngleDeg(angle);
     };
 
     const preloadAllFrames = async () => {
@@ -366,6 +367,10 @@ export default function Canvas({
     window.addEventListener("touchend", handleTouchEnd);
 
     return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+
       canvas.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
@@ -479,7 +484,7 @@ export default function Canvas({
       style={{
         width: "100%",
         maxWidth: "100%",
-        background: "red",
+        background: "transparent",
         cursor: "grab",
         position: "relative",
         overflow: "hidden",

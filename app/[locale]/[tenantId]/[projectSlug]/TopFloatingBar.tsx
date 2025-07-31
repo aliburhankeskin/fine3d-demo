@@ -23,7 +23,7 @@ const TopFloatingBar = ({ angleDeg }: { angleDeg: number }) => {
         pointerEvents: "none",
       }}
     >
-      <Box sx={{ pointerEvents: "auto" }}>
+      <Box sx={{ userSelect: "none", pointerEvents: "auto" }}>
         <Image
           src="/logo-big.svg"
           alt="Logo"
