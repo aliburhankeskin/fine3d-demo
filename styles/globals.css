@@ -13,3 +13,13 @@ a {
 * {
   box-sizing: border-box;
 }
+
+/* Hide scrollbar class */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

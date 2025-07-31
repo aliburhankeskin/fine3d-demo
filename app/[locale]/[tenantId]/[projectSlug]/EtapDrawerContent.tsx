@@ -447,47 +447,16 @@ const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
           }}
           style={{
             overflow: isMobile ? "visible" : "auto", // Mobile'da scroll yok
-            scrollbarWidth: "thin",
-            scrollbarColor: "#2F3D5E transparent",
           }}
           outerElementType={({ children, ...props }) => (
             <div
               {...props}
               style={{
                 ...props.style,
-                "&::-webkit-scrollbar": {
-                  width: "6px",
-                },
-                "&::-webkit-scrollbar-track": {
-                  background: "transparent",
-                },
-                "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: "#2F3D5E",
-                  borderRadius: "3px",
-                },
-                "&::-webkit-scrollbar-thumb:hover": {
-                  backgroundColor: "#243147",
-                },
+                scrollbarWidth: "none" /* Firefox */,
+                msOverflowStyle: "none" /* IE and Edge */,
               }}
-              sx={{
-                "& ::-webkit-scrollbar": {
-                  width: "6px",
-                },
-                "& ::-webkit-scrollbar-track": {
-                  background: "transparent",
-                },
-                "& ::-webkit-scrollbar-thumb": {
-                  backgroundColor: "primary.main", // #2F3D5E
-                  borderRadius: "3px",
-                  "&:hover": {
-                    backgroundColor: "primary.dark",
-                  },
-                },
-                "& *": {
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "primary.main transparent",
-                },
-              }}
+              className="hide-scrollbar"
             >
               {children}
             </div>
