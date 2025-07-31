@@ -8,6 +8,7 @@ export interface IAppReducer {
   generalLoading: boolean;
   languageLoading: boolean;
   languages: ILanguageDto[];
+  drawerOpen: boolean;
   errorMessages: {
     tr: string;
     en: string;

@@ -6,7 +6,13 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import MenuIcon from "@mui/icons-material/Menu";
 
-const FixedRightSideMenu = () => {
+interface FixedRightSideMenuProps {
+  onMenuToggle?: () => void;
+}
+
+const FixedRightSideMenu: React.FC<FixedRightSideMenuProps> = ({
+  onMenuToggle,
+}) => {
   return (
     <Stack
       direction="column"
@@ -27,7 +33,7 @@ const FixedRightSideMenu = () => {
       }}
     >
       <Stack spacing={2} alignItems="center">
-        <IconButton>
+        <IconButton onClick={onMenuToggle}>
           <MenuIcon color="primary" />
         </IconButton>
         <IconButton>

@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
+import { useDispatch } from "react-redux";
+import { useAppSelector } from "@redux/hooks";
 import {
   Box,
   Stack,
@@ -13,6 +15,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import FixedRightSideMenu from "./FixedRightSideMenu";
+import { setDrawerOpen } from "@/redux/appSlice";
 
 interface AppLayoutProps {
   drawer: React.ReactNode;
@@ -25,6 +28,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
   const theme = useTheme();
   const isSmUp = useMediaQuery(theme.breakpoints.up("md"));
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const dispatch = useDispatch();
+  const drawerOpen = useAppSelector((state) => state.AppReducer.drawerOpen);
+
+  const handleDrawerToggle = () => {
+    dispatch(setDrawerOpen(!drawerOpen));
+  };
 
   return (
     <Stack
@@ -68,23 +77,28 @@ const AppLayout: React.FC<AppLayoutProps> = ({ drawer, children }) => {
       <Drawer
         variant={isSmUp ? "permanent" : "temporary"}
         anchor="right"
-        open={isSmUp}
+        open={isSmUp && drawerOpen}
         ModalProps={{ keepMounted: true }}
         sx={{
-          width: drawerWidth,
+          width: drawerOpen ? drawerWidth : 0,
           flexShrink: 0,
           "& .MuiDrawer-paper": {
-            width: drawerWidth,
+            width: drawerWidth, // Sabit genişlik
             boxSizing: "border-box",
             borderLeft: "1px solid #ddd",
-            marginRight: "60px",
+            marginRight: "60px", // FixedRightSideMenu için her zaman 60px
             overflow: "hidden",
+            transform: drawerOpen
+              ? "translateX(0)"
+              : `translateX(${drawerWidth}px)`, // Smooth slide animation
+            transition: "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)", // Smooth easing
+            visibility: drawerOpen ? "visible" : "hidden", // Kapalıyken görünmez
           },
         }}
       >
         {drawer}
       </Drawer>
-      <FixedRightSideMenu />
+      <FixedRightSideMenu onMenuToggle={handleDrawerToggle} />
     </Stack>
   );
 };

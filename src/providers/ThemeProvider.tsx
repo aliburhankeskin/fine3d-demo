@@ -31,9 +31,6 @@ export default function CustomThemeProvider({ children }: any) {
   }, [dispatch]);
 
   const getTheme = useCallback(() => {
-    if (themeMode === ThemeOptionsEnum.SYSTEM) {
-      return getSystemTheme();
-    }
     return themeMode;
   }, [themeMode]);
 

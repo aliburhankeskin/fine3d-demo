@@ -9,6 +9,7 @@ const initialState: IAppReducer = {
   generalLoading: false,
   languageLoading: true,
   languages: [],
+  drawerOpen: true, // Varsayılan olarak açık
   errorMessages: {
     tr: "Beklenmedik bir hata oluştu lütfen daha sonra tekrar deneyiniz! Sorun çözülmez ise yetkililer ile iletişime geçiniz...",
     en: "An unexpected error occurred, please try again later! If the problem is not solved, contact the authorities...",
@@ -45,6 +46,10 @@ export const appSlice = createSlice({
       state.languages = action.payload;
       return state;
     },
+    setDrawerOpen: (state, action: PayloadAction<boolean>) => {
+      state.drawerOpen = action.payload;
+      return state;
+    },
   },
 });
 
@@ -55,6 +60,7 @@ export const {
   setGeneralLoading,
   setLanguageLoading,
   setLanguages,
+  setDrawerOpen,
 } = appSlice.actions;
 
 export default appSlice.reducer;

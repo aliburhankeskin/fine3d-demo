@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Box, useMediaQuery } from "@mui/material";
+import { useAppSelector } from "@redux/hooks";
+import { useMediaQuery } from "@mui/material";
 import { ITagItem } from "@/types/ITagItem";
 import * as THREE from "three";
 import TopFloatingBar from "./TopFloatingBar";
 import BottomFloatingControls from "./BottomFloatingControls";
 import BottomFloatingBar from "./BottomFloatingBar";
+import PolygonOverlay from "./PolygonOverlay";
 
 type CanvasConfig = {
   preloadFrameCount?: number;
@@ -33,6 +35,8 @@ export default function Canvas({
   tabBarData?: any;
   canvasHeight?: number;
 }) {
+  const drawerOpen = useAppSelector((state) => state.AppReducer.drawerOpen);
+  const ContainerWidth = 1920 - (drawerOpen ? 400 : 0);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const {
     preloadFrameCount = 5,
@@ -49,6 +53,13 @@ export default function Canvas({
 
   const [angleDeg, setAngleDeg] = useState(startAngle);
   const [isLoading, setIsLoading] = useState(true);
+  const [containerDimensions, setContainerDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
+  const [currentDisplayFrame, setCurrentDisplayFrame] = useState(
+    mainFrameAnchors?.[0] || 0
+  );
   const loadedFramesCountRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer>(null);
@@ -108,7 +119,7 @@ export default function Canvas({
 
     const container = containerRef.current;
     const scene = new THREE.Scene();
-    const aspect = container.clientWidth / container.clientHeight;
+    const aspect = ContainerWidth / 1080;
     const height = cameraHeight;
     const width = height * aspect;
     const textureCache = textureCacheRef.current;
@@ -225,6 +236,7 @@ export default function Canvas({
           mat.needsUpdate = true;
         }
         currentFrameRef.current = displayFrame;
+        setCurrentDisplayFrame(displayFrame); // State'i güncelle
       }
 
       renderer.render(scene, camera);
@@ -332,8 +344,8 @@ export default function Canvas({
     const handleResize = () => {
       if (!containerRef.current || !rendererRef.current || !cameraRef.current)
         return;
-      const w = containerRef.current.clientWidth;
-      const h = containerRef.current.clientHeight;
+      const w = ContainerWidth;
+      const h = 1080;
       const aspect = w / h;
       const width = cameraHeight * aspect;
       cameraRef.current.left = -width / 2;
@@ -416,7 +428,50 @@ export default function Canvas({
     cameraRef.current.updateProjectionMatrix();
 
     rendererRef.current.setSize(width, height, true);
-  }, [canvasHeight, cameraHeight]);
+  }, [canvasHeight, cameraHeight, isMobile]);
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current && rendererRef.current) {
+        const canvas = rendererRef.current.domElement;
+        setContainerDimensions({
+          width: canvas.width / rendererRef.current.getPixelRatio(),
+          height: canvas.height / rendererRef.current.getPixelRatio(),
+        });
+      } else if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setContainerDimensions({
+          width: rect.width,
+          height: rect.height,
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener("resize", updateDimensions);
+
+    return () => {
+      window.removeEventListener("resize", updateDimensions);
+    };
+  }, [canvasHeight]);
+
+  useEffect(() => {
+    if (!containerRef.current || !rendererRef.current || !cameraRef.current)
+      return;
+    const w = ContainerWidth;
+    const h = 1080;
+    const aspect = w / h;
+    const width = cameraHeight * aspect;
+    cameraRef.current.left = -width / 2;
+    cameraRef.current.right = width / 2;
+    cameraRef.current.top = cameraHeight / 2;
+    cameraRef.current.bottom = -cameraHeight / 2;
+    cameraRef.current.updateProjectionMatrix();
+    rendererRef.current.setSize(w, h);
+  }, [drawerOpen]);
+
+  const currentFramePolygons =
+    workspaceItems?.[currentDisplayFrame]?.polygons || [];
 
   return (
     <div
@@ -424,7 +479,7 @@ export default function Canvas({
       style={{
         width: "100%",
         maxWidth: "100%",
-        background: "#000",
+        background: "red",
         cursor: "grab",
         position: "relative",
         overflow: "hidden",
@@ -459,6 +514,16 @@ export default function Canvas({
         >
           Yükleniyor...
         </div>
+      )}
+
+      {containerDimensions.width > 0 && containerDimensions.height > 0 && (
+        <PolygonOverlay
+          polygons={currentFramePolygons}
+          containerWidth={ContainerWidth}
+          containerHeight={1080}
+          imageWidth={geometrySize[0] * 120}
+          imageHeight={geometrySize[1] * 120}
+        />
       )}
 
       <BottomFloatingControls
