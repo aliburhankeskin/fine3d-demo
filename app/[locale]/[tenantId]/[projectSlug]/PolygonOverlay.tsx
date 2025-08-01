@@ -5,6 +5,7 @@ import { useAppSelector } from "@redux/hooks";
 import { Box, Card, Typography, Fade } from "@mui/material";
 import { IPolygonModel } from "@/types/IPolygonModel";
 import { EntityTypeEnum } from "@/enums/EntityTypeEnum";
+import usePresentation from "./usePresentation";
 
 interface PolygonOverlayProps {
   polygons: IPolygonModel[];
@@ -29,9 +30,8 @@ const PolygonCard: React.FC<PolygonCardProps> = ({
   containerHeight,
   blocks,
 }) => {
-  // Card'ın ekran dışına çıkmasını engelle
   const cardWidth = 250;
-  const cardHeight = polygon.entityType === EntityTypeEnum.Block ? 60 : 140; // Block için küçük, diğerleri için normal
+  const cardHeight = polygon.entityType === EntityTypeEnum.Block ? 60 : 140;
 
   const adjustedX = Math.min(
     Math.max(mousePosition.x + 15, 10),
@@ -92,7 +92,6 @@ const PolygonCard: React.FC<PolygonCardProps> = ({
     >
       <Box sx={{ p: polygon.entityType === EntityTypeEnum.Block ? 2 : 2.5 }}>
         {polygon.entityType === EntityTypeEnum.Block ? (
-          // Block için sadece blok ismi
           <Typography
             variant="h6"
             sx={{ fontSize: "16px", fontWeight: 700, color: "#fff" }}
@@ -153,6 +152,8 @@ export default function PolygonOverlay({
     (item: any) => item.entityName === "Block"
   )?.data;
 
+  const { hadndleChangePresentation } = usePresentation();
+
   const [hoveredPolygon, setHoveredPolygon] = useState<IPolygonModel | null>(
     null
   );
@@ -193,26 +194,11 @@ export default function PolygonOverlay({
     return pathString;
   };
 
-  const getPolygonCenter = (points: { x: number; y: number }[]) => {
-    const screenPoints = points.map((point) =>
-      convertToScreenCoordinates(point)
-    );
-    const centerX =
-      screenPoints.reduce((sum, point) => sum + point.x, 0) /
-      screenPoints.length;
-    const centerY =
-      screenPoints.reduce((sum, point) => sum + point.y, 0) /
-      screenPoints.length;
-    return { x: centerX, y: centerY };
-  };
-
   const getPolygonTopPoint = (points: { x: number; y: number }[]) => {
     const screenPoints = points.map((point) =>
       convertToScreenCoordinates(point)
     );
-    // En üst Y değerini bul (en küçük Y değeri)
     const minY = Math.min(...screenPoints.map((point) => point.y));
-    // X koordinatı için ortalama al (yatayda ortala)
     const centerX =
       screenPoints.reduce((sum, point) => sum + point.x, 0) /
       screenPoints.length;
@@ -225,11 +211,11 @@ export default function PolygonOverlay({
       const block = blocks.find(
         (block: any) => block?.Id === polygon.relatedEntityId
       );
-      // Try to get name from block data, fallback to a formatted name
       return block?.name || block?.Name || `${polygon.relatedEntityId} Blok`;
     }
     return null;
   };
+
   const handlePolygonHover = (
     polygon: IPolygonModel,
     event: React.MouseEvent
@@ -259,35 +245,30 @@ export default function PolygonOverlay({
   const handlePolygonClick = (polygon: IPolygonModel) => {
     switch (polygon.entityType) {
       case EntityTypeEnum.Block:
-        console.log("Block clicked:", polygon);
-        if (polygon.navigationValue && polygon.navigationType) {
-          // router.push(polygon.navigationValue);
-        }
+        hadndleChangePresentation(
+          polygon?.entityType,
+          polygon?.relatedEntityId
+        );
         break;
 
       case EntityTypeEnum.Floor:
         console.log("Floor clicked:", polygon);
-        // Floor specific logic
         break;
 
       case EntityTypeEnum.Unit:
         console.log("Unit clicked:", polygon);
-        // Unit specific logic
         break;
 
       case EntityTypeEnum.Project:
         console.log("Project clicked:", polygon);
-        // Project specific logic
         break;
 
       case EntityTypeEnum.ProjectStage:
         console.log("ProjectStage clicked:", polygon);
-        // ProjectStage specific logic
         break;
 
       case EntityTypeEnum.Dollhouse:
         console.log("Dollhouse clicked:", polygon);
-        // Dollhouse specific logic
         break;
 
       default:
@@ -349,13 +330,10 @@ export default function PolygonOverlay({
               onClick={() => handlePolygonClick(polygon)}
             />
 
-            {/* Block Name in Center */}
             {polygon.entityType === EntityTypeEnum.Block &&
               getBlockName(polygon) && (
                 <>
-                  {/* Pin tasarımı */}
                   <g>
-                    {/* Poligonun en üst noktasında daire */}
                     <circle
                       cx={getPolygonTopPoint(polygon.points).x}
                       cy={getPolygonTopPoint(polygon.points).y + 20}
@@ -369,7 +347,6 @@ export default function PolygonOverlay({
                       }}
                     />
 
-                    {/* Çizgi - daireden chip'e */}
                     <line
                       x1={getPolygonTopPoint(polygon.points).x}
                       y1={getPolygonTopPoint(polygon.points).y + 20}
@@ -382,7 +359,6 @@ export default function PolygonOverlay({
                       }}
                     />
 
-                    {/* Chip - Blok adı */}
                     <rect
                       x={getPolygonTopPoint(polygon.points).x - 40}
                       y={getPolygonTopPoint(polygon.points).y - 40}
@@ -400,7 +376,6 @@ export default function PolygonOverlay({
                     />
                   </g>
 
-                  {/* Blok adı text */}
                   <text
                     x={getPolygonTopPoint(polygon.points).x}
                     y={getPolygonTopPoint(polygon.points).y - 27}
@@ -422,8 +397,6 @@ export default function PolygonOverlay({
           </g>
         ))}
       </svg>
-
-      {/* Hover Card */}
       {hoveredPolygon && (
         <Fade in={!!hoveredPolygon} timeout={200}>
           <Box>

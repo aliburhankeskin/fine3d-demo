@@ -67,6 +67,17 @@ export const appSlice = createSlice({
       state.rightBarContentResponse = rightBarContentResponse;
       return state;
     },
+    setAllPresentationDataWithoutInit: (state, action: PayloadAction<any>) => {
+      const {
+        presentationResponse,
+        tabBarContentResponse,
+        rightBarContentResponse,
+      } = action.payload;
+      state.presentationResponse = presentationResponse;
+      state.tabBarContentResponse = tabBarContentResponse;
+      state.rightBarContentResponse = rightBarContentResponse;
+      return state;
+    },
     setPresentationInitResponse: (state, action: PayloadAction<any | null>) => {
       state.presentationInitResponse = action.payload;
       return state;
@@ -99,6 +110,7 @@ export const {
   setPresentationResponse,
   setTabBarContentResponse,
   setRightBarContentResponse,
+  setAllPresentationDataWithoutInit,
 } = appSlice.actions;
 
 export default appSlice.reducer;
