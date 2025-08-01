@@ -3,11 +3,12 @@ import { OpsApiRoutes } from "@network/OpsApiRoutes";
 import getAcceptLanguage from "@helpers/Auth/getAcceptLanguage";
 import { EntityTypeEnum } from "@enums/EntityTypeEnum";
 import AppLayout from "@/layout/AppLayout";
-import EtapDrawerContent from "./EtapDrawerContent";
+import UnitDrawer from "./UnitDrawer";
 import { IPresentationInitResponse } from "@/types/IPresentationInitResponse";
 import { IBaseResponse } from "@/types/IBaseResponse";
 import { IPresentationResponse } from "@/types/IPresentationResponse";
 import CanvasWithDrawer from "./CanvasWithDrawer";
+import DataProvider from "@/providers/DataProvider";
 
 export default async function Page({
   params,
@@ -59,8 +60,7 @@ export default async function Page({
           TenantId,
           ProjectSlug,
           ProjectId: initData?.projectId,
-          ProjectStageId: initData?.projectId,
-          EntityType: 1,
+          EntityType: EntityTypeEnum.Project,
         },
         headers,
       }),
@@ -71,20 +71,15 @@ export default async function Page({
     ]);
 
   return (
-    <AppLayout
-      drawer={
-        <EtapDrawerContent
-          units={RightBarContentResponse?.data?.data}
-          initResponse={PresentationInitResponse?.data?.data as any}
-        />
-      }
+    <DataProvider
+      presentationInitResponse={PresentationInitResponse?.data?.data || null}
+      presentationResponse={PresentationResponse?.data?.data || null}
+      tabBarContentResponse={TabBarContentResponse?.data?.data || null}
+      rightBarContentResponse={RightBarContentResponse?.data?.data}
     >
-      <CanvasWithDrawer
-        initResponse={PresentationInitResponse?.data?.data}
-        presentationData={PresentationResponse?.data?.data}
-        tabBarData={TabBarContentResponse?.data?.data}
-        units={RightBarContentResponse?.data?.data}
-      />
-    </AppLayout>
+      <AppLayout drawer={<UnitDrawer />}>
+        <CanvasWithDrawer />
+      </AppLayout>
+    </DataProvider>
   );
 }

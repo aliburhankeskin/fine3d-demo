@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppSelector } from "@redux/hooks";
 import { useMediaQuery } from "@mui/material";
-import { ITagItem } from "@/types/ITagItem";
 import * as THREE from "three";
 import TopFloatingBar from "./TopFloatingBar";
 import BottomFloatingControls from "./BottomFloatingControls";
@@ -23,18 +22,10 @@ function safeMod(n: number, m: number): number {
 
 const MIN_CANVAS_HEIGHT = 250;
 
-export default function Canvas({
-  workspaceItems = [],
-  config = {},
-  tabBarData,
-  canvasHeight,
-}: {
-  workspaceItems?: ITagItem[];
-  config?: CanvasConfig;
-  tabBarData?: any;
-  canvasHeight?: number;
-}) {
-  const drawerOpen = useAppSelector((state) => state.AppReducer.drawerOpen);
+export default function Canvas({ canvasHeight }: { canvasHeight?: number }) {
+  const { drawerOpen, presentationInitResponse, presentationResponse } =
+    useAppSelector((state) => state.AppReducer);
+  const workspaceItems: any[] = presentationResponse?.tags || [];
   const ContainerWidth = 1920 - (drawerOpen ? 400 : 0);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const {
@@ -42,7 +33,12 @@ export default function Canvas({
     geometrySize = [16, 9],
     cameraHeight = 9,
     startAngle = 180,
-  } = config;
+  } = (presentationInitResponse?.canvasConfig as CanvasConfig) || {
+    preloadFrameCount: 5,
+    geometrySize: [16, 9],
+    cameraHeight: 9,
+    startAngle: 180,
+  };
 
   const totalFrames = workspaceItems?.length || 0;
   const mainFrameAnchors = workspaceItems
@@ -539,8 +535,7 @@ export default function Canvas({
       {!isMobile && (
         <>
           <TopFloatingBar angleDeg={angleDeg} />
-
-          <BottomFloatingBar data={tabBarData} />
+          <BottomFloatingBar />
         </>
       )}
     </div>

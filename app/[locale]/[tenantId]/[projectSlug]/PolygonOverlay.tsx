@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useAppSelector } from "@redux/hooks";
 import { Box, Card, Typography, Fade } from "@mui/material";
 import { IPolygonModel } from "@/types/IPolygonModel";
+import { EntityTypeEnum } from "@/enums/EntityTypeEnum";
 
 interface PolygonOverlayProps {
   polygons: IPolygonModel[];
@@ -17,6 +19,7 @@ interface PolygonCardProps {
   mousePosition: { x: number; y: number };
   containerWidth: number;
   containerHeight: number;
+  blocks?: any[];
 }
 
 const PolygonCard: React.FC<PolygonCardProps> = ({
@@ -24,10 +27,11 @@ const PolygonCard: React.FC<PolygonCardProps> = ({
   mousePosition,
   containerWidth,
   containerHeight,
+  blocks,
 }) => {
   // Card'ın ekran dışına çıkmasını engelle
   const cardWidth = 250;
-  const cardHeight = 120;
+  const cardHeight = polygon.entityType === EntityTypeEnum.Block ? 60 : 140; // Block için küçük, diğerleri için normal
 
   const adjustedX = Math.min(
     Math.max(mousePosition.x + 15, 10),
@@ -39,6 +43,35 @@ const PolygonCard: React.FC<PolygonCardProps> = ({
     containerHeight - cardHeight - 10
   );
 
+  const getCardTitle = () => {
+    switch (polygon.entityType) {
+      case EntityTypeEnum.Block:
+        return "Blok Bilgileri";
+      case EntityTypeEnum.Floor:
+        return "Kat Bilgileri";
+      case EntityTypeEnum.Unit:
+        return "Daire Bilgileri";
+      case EntityTypeEnum.Project:
+        return "Proje Bilgileri";
+      case EntityTypeEnum.ProjectStage:
+        return "Proje Aşaması";
+      case EntityTypeEnum.Dollhouse:
+        return "Dollhouse Bilgileri";
+      default:
+        return "Bilgiler";
+    }
+  };
+
+  const getBlockName = (polygon: IPolygonModel) => {
+    if (polygon.entityType === EntityTypeEnum.Block && blocks) {
+      const block = blocks.find(
+        (block: any) => block.Id === polygon.relatedEntityId
+      );
+      return block?.name || block?.Name || `${polygon.relatedEntityId} Blok`;
+    }
+    return null;
+  };
+
   return (
     <Card
       sx={{
@@ -46,45 +79,62 @@ const PolygonCard: React.FC<PolygonCardProps> = ({
         left: adjustedX,
         top: adjustedY,
         width: cardWidth,
-        backgroundColor: "rgba(122, 144, 73, 0.8)",
+        backgroundColor: "rgba(122, 144, 73, 0.95)",
         color: "white",
         backdropFilter: "blur(10px)",
         zIndex: 1000,
         pointerEvents: "none",
         transform: "translateZ(0)",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.5)",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+        borderRadius: "12px",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
       }}
     >
-      <Box sx={{ p: 2 }}>
-        <Typography
-          variant="h6"
-          sx={{ fontSize: "14px", fontWeight: 600, mb: 1 }}
-        >
-          Blok Adı
-        </Typography>
-
-        {polygon.entityTypeDescription && (
+      <Box sx={{ p: polygon.entityType === EntityTypeEnum.Block ? 2 : 2.5 }}>
+        {polygon.entityType === EntityTypeEnum.Block ? (
+          // Block için sadece blok ismi
           <Typography
-            variant="body2"
-            sx={{ fontSize: "12px", mb: 0.5, opacity: 0.8 }}
+            variant="h6"
+            sx={{ fontSize: "16px", fontWeight: 700, color: "#fff" }}
           >
-            Tip: {polygon.entityTypeDescription}
+            {getBlockName(polygon)}
           </Typography>
-        )}
+        ) : (
+          <>
+            <Typography
+              variant="h6"
+              sx={{ fontSize: "16px", fontWeight: 700, mb: 1.5, color: "#fff" }}
+            >
+              {getCardTitle()}
+            </Typography>
 
-        {polygon.navigationTypeDescription && (
-          <Typography
-            variant="body2"
-            sx={{ fontSize: "12px", mb: 0.5, opacity: 0.8 }}
-          >
-            Navigasyon: {polygon.navigationTypeDescription}
-          </Typography>
-        )}
+            {polygon.entityTypeDescription && (
+              <Typography
+                variant="body2"
+                sx={{ fontSize: "12px", mb: 0.5, opacity: 0.8 }}
+              >
+                Tip: {polygon.entityTypeDescription}
+              </Typography>
+            )}
 
-        {polygon.navigationValue && (
-          <Typography variant="body2" sx={{ fontSize: "12px", opacity: 0.7 }}>
-            Değer: {polygon.navigationValue}
-          </Typography>
+            {polygon.navigationTypeDescription && (
+              <Typography
+                variant="body2"
+                sx={{ fontSize: "12px", mb: 0.5, opacity: 0.8 }}
+              >
+                Navigasyon: {polygon.navigationTypeDescription}
+              </Typography>
+            )}
+
+            {polygon.navigationValue && (
+              <Typography
+                variant="body2"
+                sx={{ fontSize: "12px", opacity: 0.7 }}
+              >
+                Değer: {polygon.navigationValue}
+              </Typography>
+            )}
+          </>
         )}
       </Box>
     </Card>
@@ -98,6 +148,11 @@ export default function PolygonOverlay({
   imageWidth = 1920,
   imageHeight = 1080,
 }: PolygonOverlayProps) {
+  const { tabBarContentResponse } = useAppSelector((state) => state.AppReducer);
+  const blocks = tabBarContentResponse?.find(
+    (item: any) => item.entityName === "Block"
+  )?.data;
+
   const [hoveredPolygon, setHoveredPolygon] = useState<IPolygonModel | null>(
     null
   );
@@ -137,6 +192,44 @@ export default function PolygonOverlay({
 
     return pathString;
   };
+
+  const getPolygonCenter = (points: { x: number; y: number }[]) => {
+    const screenPoints = points.map((point) =>
+      convertToScreenCoordinates(point)
+    );
+    const centerX =
+      screenPoints.reduce((sum, point) => sum + point.x, 0) /
+      screenPoints.length;
+    const centerY =
+      screenPoints.reduce((sum, point) => sum + point.y, 0) /
+      screenPoints.length;
+    return { x: centerX, y: centerY };
+  };
+
+  const getPolygonTopPoint = (points: { x: number; y: number }[]) => {
+    const screenPoints = points.map((point) =>
+      convertToScreenCoordinates(point)
+    );
+    // En üst Y değerini bul (en küçük Y değeri)
+    const minY = Math.min(...screenPoints.map((point) => point.y));
+    // X koordinatı için ortalama al (yatayda ortala)
+    const centerX =
+      screenPoints.reduce((sum, point) => sum + point.x, 0) /
+      screenPoints.length;
+
+    return { x: centerX, y: minY };
+  };
+
+  const getBlockName = (polygon: IPolygonModel) => {
+    if (polygon.entityType === EntityTypeEnum.Block && blocks) {
+      const block = blocks.find(
+        (block: any) => block?.Id === polygon.relatedEntityId
+      );
+      // Try to get name from block data, fallback to a formatted name
+      return block?.name || block?.Name || `${polygon.relatedEntityId} Blok`;
+    }
+    return null;
+  };
   const handlePolygonHover = (
     polygon: IPolygonModel,
     event: React.MouseEvent
@@ -164,14 +257,46 @@ export default function PolygonOverlay({
   };
 
   const handlePolygonClick = (polygon: IPolygonModel) => {
-    if (polygon.navigationValue && polygon.navigationType) {
-      console.log("Navigate to:", polygon.navigationValue);
-      // Örnek: router.push(polygon.navigationValue);x
+    switch (polygon.entityType) {
+      case EntityTypeEnum.Block:
+        console.log("Block clicked:", polygon);
+        if (polygon.navigationValue && polygon.navigationType) {
+          // router.push(polygon.navigationValue);
+        }
+        break;
+
+      case EntityTypeEnum.Floor:
+        console.log("Floor clicked:", polygon);
+        // Floor specific logic
+        break;
+
+      case EntityTypeEnum.Unit:
+        console.log("Unit clicked:", polygon);
+        // Unit specific logic
+        break;
+
+      case EntityTypeEnum.Project:
+        console.log("Project clicked:", polygon);
+        // Project specific logic
+        break;
+
+      case EntityTypeEnum.ProjectStage:
+        console.log("ProjectStage clicked:", polygon);
+        // ProjectStage specific logic
+        break;
+
+      case EntityTypeEnum.Dollhouse:
+        console.log("Dollhouse clicked:", polygon);
+        // Dollhouse specific logic
+        break;
+
+      default:
+        console.log("Unknown entity type clicked:", polygon);
+        break;
     }
   };
 
   if (!polygons || polygons.length === 0) {
-    console.log("PolygonOverlay: No polygons to render, polygons:", polygons);
     return null;
   }
 
@@ -195,33 +320,106 @@ export default function PolygonOverlay({
         onMouseMove={handleMouseMove}
       >
         {polygons.map((polygon, index) => (
-          <path
-            key={`${polygon.id}-${index}`}
-            d={createPolygonPath(polygon.points)}
-            fill={
-              hoveredPolygon?.id === polygon.id
-                ? "rgba(122, 144, 73, 0.4)"
-                : "transparent"
-            }
-            stroke={
-              hoveredPolygon?.id === polygon.id
-                ? "rgba(122, 144, 73, 0.8)"
-                : "transparent"
-            }
-            strokeWidth={hoveredPolygon?.id === polygon.id ? "3" : "1"}
-            style={{
-              pointerEvents: "auto",
-              cursor: "pointer",
-              transition: "all 0.3s ease-in-out",
-              filter:
+          <g key={`polygon-group-${polygon.id}-${index}`}>
+            <path
+              key={`${polygon.id}-${index}`}
+              d={createPolygonPath(polygon.points)}
+              fill={
                 hoveredPolygon?.id === polygon.id
-                  ? "drop-shadow(0 0 12px rgba(122, 144, 73, 0.6))"
-                  : "none",
-            }}
-            onMouseEnter={(e) => handlePolygonHover(polygon, e)}
-            onMouseLeave={handlePolygonLeave}
-            onClick={() => handlePolygonClick(polygon)}
-          />
+                  ? "rgba(122, 144, 73, 0.4)"
+                  : "transparent"
+              }
+              stroke={
+                hoveredPolygon?.id === polygon.id
+                  ? "rgba(122, 144, 73, 0.8)"
+                  : "transparent"
+              }
+              strokeWidth={hoveredPolygon?.id === polygon.id ? "3" : "1"}
+              style={{
+                pointerEvents: "auto",
+                cursor: "pointer",
+                transition: "all 0.3s ease-in-out",
+                filter:
+                  hoveredPolygon?.id === polygon.id
+                    ? "drop-shadow(0 0 12px rgba(122, 144, 73, 0.6))"
+                    : "none",
+              }}
+              onMouseEnter={(e) => handlePolygonHover(polygon, e)}
+              onMouseLeave={handlePolygonLeave}
+              onClick={() => handlePolygonClick(polygon)}
+            />
+
+            {/* Block Name in Center */}
+            {polygon.entityType === EntityTypeEnum.Block &&
+              getBlockName(polygon) && (
+                <>
+                  {/* Pin tasarımı */}
+                  <g>
+                    {/* Poligonun en üst noktasında daire */}
+                    <circle
+                      cx={getPolygonTopPoint(polygon.points).x}
+                      cy={getPolygonTopPoint(polygon.points).y + 20}
+                      r="8"
+                      fill="rgba(122, 144, 73, 1)"
+                      stroke="rgba(122, 144, 73, 1)"
+                      strokeWidth="2"
+                      style={{
+                        pointerEvents: "none",
+                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                      }}
+                    />
+
+                    {/* Çizgi - daireden chip'e */}
+                    <line
+                      x1={getPolygonTopPoint(polygon.points).x}
+                      y1={getPolygonTopPoint(polygon.points).y + 20}
+                      x2={getPolygonTopPoint(polygon.points).x}
+                      y2={getPolygonTopPoint(polygon.points).y - 15}
+                      stroke="rgba(122, 144, 73, 1)"
+                      strokeWidth="2"
+                      style={{
+                        pointerEvents: "none",
+                      }}
+                    />
+
+                    {/* Chip - Blok adı */}
+                    <rect
+                      x={getPolygonTopPoint(polygon.points).x - 40}
+                      y={getPolygonTopPoint(polygon.points).y - 40}
+                      width="80"
+                      height="25"
+                      rx="12"
+                      ry="12"
+                      fill="rgba(122, 144, 73, 1)"
+                      stroke="rgba(122, 144, 73, 1)"
+                      strokeWidth="2"
+                      style={{
+                        pointerEvents: "none",
+                        filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.2))",
+                      }}
+                    />
+                  </g>
+
+                  {/* Blok adı text */}
+                  <text
+                    x={getPolygonTopPoint(polygon.points).x}
+                    y={getPolygonTopPoint(polygon.points).y - 27}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{
+                      fill: "white",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      fontFamily: "Arial, sans-serif",
+                      pointerEvents: "none",
+                      userSelect: "none",
+                    }}
+                  >
+                    {getBlockName(polygon)}
+                  </text>
+                </>
+              )}
+          </g>
         ))}
       </svg>
 
@@ -234,6 +432,7 @@ export default function PolygonOverlay({
               mousePosition={mousePosition}
               containerWidth={containerWidth}
               containerHeight={containerHeight}
+              blocks={blocks}
             />
           </Box>
         </Fade>

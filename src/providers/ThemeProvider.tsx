@@ -3,32 +3,12 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "@redux/hooks";
-import { setTheme } from "@redux/appSlice";
-import { getSystemTheme } from "@helpers/Common/getSystemTheme";
-import { localStorageService } from "@helpers/Common/localStorageService";
 import { CssBaseline, GlobalStyles } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
-import { LocalStorageKeysEnum } from "@enums/LocalStorageKeysEnum";
-import { ThemeOptionsEnum } from "@enums/ThemeOptionsEnum";
 import { getDefaultTheme } from "@/assets/theme/theme";
 
 export default function CustomThemeProvider({ children }: any) {
   const themeMode = useAppSelector((state) => state.AppReducer.theme);
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const savedTheme = localStorageService.getItem(
-      LocalStorageKeysEnum.THEME
-    ) as ThemeOptionsEnum;
-
-    if (savedTheme) {
-      dispatch(setTheme(savedTheme));
-    } else {
-      const systemTheme = getSystemTheme();
-
-      dispatch(setTheme(systemTheme));
-    }
-  }, [dispatch]);
 
   const getTheme = useCallback(() => {
     return themeMode;

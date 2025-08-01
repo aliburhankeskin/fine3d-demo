@@ -1,5 +1,6 @@
 import { ThemeOptionsEnum } from "@enums/ThemeOptionsEnum";
 import { ILanguageDto } from "@/types/ILanguageDto";
+import { IPresentationInitResponse } from "@/types/IPresentationInitResponse";
 
 export interface IAppReducer {
   theme: ThemeOptionsEnum;
@@ -17,4 +18,8 @@ export interface IAppReducer {
     tr: string;
     en: string;
   };
+  presentationInitResponse: IPresentationInitResponse | null;
+  presentationResponse: any | null;
+  tabBarContentResponse: any | null;
+  rightBarContentResponse: any | null;
 }

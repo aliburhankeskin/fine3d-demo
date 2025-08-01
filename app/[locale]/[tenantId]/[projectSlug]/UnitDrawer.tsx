@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useMemo, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useAppSelector } from "@redux/hooks";
 import {
   Badge,
   Box,
@@ -20,31 +21,21 @@ import { IUnitTemplate } from "../../../../src/types/IUnitTemplate";
 import { IPresentationInitResponse } from "../../../../src/types/IPresentationInitResponse";
 import UnitListItem from "./UnitListItem";
 
-interface EtapDrawerContentProps {
-  initResponse?: IPresentationInitResponse;
-  units?: IUnitTemplate[];
-}
-
 type ViewMode = "card" | "list";
 
-const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
-  initResponse = {
-    startingEntity: 1,
-    projectId: 1,
-    projectName: "",
-    projectSlogan: "",
-    startMode: 1,
-    themeObject: null,
-    canvasConfig: null,
-    compassInitialDegree: null,
-    companyName: "",
-    unitStates: [],
-    unitTemplates: [],
-    unitTypes: [],
-    companyLogo: null,
-  },
-  units = [],
-}) => {
+const UnitDrawer = () => {
+  const { rightBarContentResponse, presentationInitResponse } = useAppSelector(
+    (state) => state.AppReducer
+  );
+
+  const units: any[] = useMemo(
+    () => rightBarContentResponse || [],
+    [rightBarContentResponse]
+  );
+
+  const initResponse =
+    presentationInitResponse || ({} as IPresentationInitResponse);
+
   const t = useTranslations("Common");
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [viewMode, setViewMode] = useState<ViewMode>("card");
@@ -469,4 +460,4 @@ const EtapDrawerContent: React.FC<EtapDrawerContentProps> = ({
   );
 };
 
-export default EtapDrawerContent;
+export default UnitDrawer;

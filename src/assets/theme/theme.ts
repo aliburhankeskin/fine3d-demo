@@ -9,12 +9,12 @@ export const customFont = Lato({
 
 export const getDefaultTheme = (mode: "dark" | "light") =>
   createTheme({
-    ...(mode === "dark"
+    ...(mode === "light"
       ? {
           palette: {
             mode: "light",
             primary: {
-              main: "#2F3D5E",
+              main: "#7A9049",
             },
             secondary: {
               main: "#B2D0C9",
@@ -41,7 +41,7 @@ export const getDefaultTheme = (mode: "dark" | "light") =>
           palette: {
             mode: "dark",
             primary: {
-              main: "#2F3D5E",
+              main: "#7A9049",
             },
             secondary: {
               main: "#B2D0C9",

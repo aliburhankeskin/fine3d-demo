@@ -4,24 +4,11 @@ import React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, useMediaQuery } from "@mui/material";
 import OriginalCanvas from "./Canvas";
-import EtapDrawerContent from "./EtapDrawerContent";
+import UnitDrawer from "./UnitDrawer";
 
 const MIN_DRAWER_HEIGHT = 100;
 
-export default function CanvasWithDrawer({
-  presentationData,
-  config,
-  tabBarData,
-  units,
-  initResponse,
-}: {
-  presentationData?: any;
-  config?: any;
-  tabBarData?: any;
-  units?: any;
-  initResponse?: any;
-}) {
-  const workspaceItems = presentationData?.tags || [];
+export default function CanvasWithDrawer() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const totalHeight = typeof window !== "undefined" ? window.innerHeight : 800;
   const MAX_DRAWER_HEIGHT = totalHeight - 100;
@@ -91,12 +78,7 @@ export default function CanvasWithDrawer({
         overflow: "hidden",
       }}
     >
-      <OriginalCanvas
-        workspaceItems={workspaceItems}
-        config={config}
-        tabBarData={tabBarData}
-        canvasHeight={isMobile ? canvasHeight : undefined}
-      />
+      <OriginalCanvas canvasHeight={isMobile ? canvasHeight : undefined} />
 
       {isMobile && (
         <Box
@@ -150,7 +132,7 @@ export default function CanvasWithDrawer({
               touchAction: "auto",
             }}
           >
-            <EtapDrawerContent units={units} initResponse={initResponse} />
+            <UnitDrawer />
           </Box>
         </Box>
       )}

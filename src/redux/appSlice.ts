@@ -18,6 +18,10 @@ const initialState: IAppReducer = {
     tr: "İnternet bağlantınız yok. Lütfen bağlantınızı kontrol edin.",
     en: "You have no internet connection. Please check your connection.",
   },
+  presentationInitResponse: null,
+  presentationResponse: null,
+  tabBarContentResponse: null,
+  rightBarContentResponse: null,
 };
 
 export const appSlice = createSlice({
@@ -50,6 +54,35 @@ export const appSlice = createSlice({
       state.drawerOpen = action.payload;
       return state;
     },
+    setAllPresentationData: (state, action: PayloadAction<any>) => {
+      const {
+        presentationInitResponse,
+        presentationResponse,
+        tabBarContentResponse,
+        rightBarContentResponse,
+      } = action.payload;
+      state.presentationInitResponse = presentationInitResponse;
+      state.presentationResponse = presentationResponse;
+      state.tabBarContentResponse = tabBarContentResponse;
+      state.rightBarContentResponse = rightBarContentResponse;
+      return state;
+    },
+    setPresentationInitResponse: (state, action: PayloadAction<any | null>) => {
+      state.presentationInitResponse = action.payload;
+      return state;
+    },
+    setPresentationResponse: (state, action: PayloadAction<any | null>) => {
+      state.presentationResponse = action.payload;
+      return state;
+    },
+    setTabBarContentResponse: (state, action: PayloadAction<any | null>) => {
+      state.tabBarContentResponse = action.payload;
+      return state;
+    },
+    setRightBarContentResponse: (state, action: PayloadAction<any | null>) => {
+      state.rightBarContentResponse = action.payload;
+      return state;
+    },
   },
 });
 
@@ -61,6 +94,11 @@ export const {
   setLanguageLoading,
   setLanguages,
   setDrawerOpen,
+  setAllPresentationData,
+  setPresentationInitResponse,
+  setPresentationResponse,
+  setTabBarContentResponse,
+  setRightBarContentResponse,
 } = appSlice.actions;
 
 export default appSlice.reducer;
