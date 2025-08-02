@@ -1,7 +1,7 @@
 "use client";
 import { IUnitState } from "./IUnitState";
-import { IUnitTemplate } from "./IUnitTemplate";
-import { IUnitType } from "./IUnitType";
+import { IUnitTemplatesType } from "./IUnitTemplatesType";
+import { IUnitTypeModel } from "./IUnitTypeModel";
 
 export interface IPresentationInitResponse {
   startingEntity: number;
@@ -14,7 +14,7 @@ export interface IPresentationInitResponse {
   compassInitialDegree: any;
   companyName: string;
   unitStates: IUnitState[];
-  unitTemplates: IUnitTemplate[];
-  unitTypes: IUnitType[];
+  unitTemplates: IUnitTemplatesType[];
+  unitTypes: IUnitTypeModel[];
   companyLogo: any;
 }

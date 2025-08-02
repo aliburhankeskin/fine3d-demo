@@ -53,6 +53,13 @@
     "From": "From",
     "To": "To",
     "Min": "Min",
-    "Max": "Max"
+    "Max": "Max",
+    "UnitDetails": "Unit Details",
+    "BasicInfo": "Basic Information",
+    "AreaInfo": "Area Information",
+    "LocationInfo": "Location Information",
+    "Specifications": "Specifications",
+    "Block": "Block",
+    "Stage": "Stage"
   }
 }

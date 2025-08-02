@@ -25,4 +25,6 @@ export interface IAppReducer {
   rightBarContentResponse: any | null;
   currentEntityType: EntityTypeEnum | null;
   currentEntityId: string | null;
+  selectedUnitId: number | null;
+  unitDetailDrawerOpen: boolean;
 }

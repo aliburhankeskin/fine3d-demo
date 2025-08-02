@@ -24,6 +24,8 @@ const initialState: IAppReducer = {
   rightBarContentResponse: null,
   currentEntityType: null,
   currentEntityId: null,
+  selectedUnitId: null,
+  unitDetailDrawerOpen: false,
 };
 
 export const appSlice = createSlice({
@@ -73,15 +75,11 @@ export const appSlice = createSlice({
     },
     setAllPresentationDataWithoutInit: (state, action: PayloadAction<any>) => {
       const payload = action.payload || {};
-      const {
-        presentationResponse = null,
-        tabBarContentResponse = null,
-        rightBarContentResponse = null,
-      } = payload;
+      const { presentationResponse = null, tabBarContentResponse = null } =
+        payload;
 
       state.presentationResponse = presentationResponse;
       state.tabBarContentResponse = tabBarContentResponse;
-      state.rightBarContentResponse = rightBarContentResponse;
       return state;
     },
     setPresentationInitResponse: (state, action: PayloadAction<any | null>) => {
@@ -108,6 +106,14 @@ export const appSlice = createSlice({
       state.currentEntityId = action.payload;
       return state;
     },
+    setSelectedUnitId: (state, action: PayloadAction<number | null>) => {
+      state.selectedUnitId = action.payload;
+      return state;
+    },
+    setUnitDetailDrawerOpen: (state, action: PayloadAction<boolean>) => {
+      state.unitDetailDrawerOpen = action.payload;
+      return state;
+    },
   },
 });
 
@@ -127,6 +133,8 @@ export const {
   setAllPresentationDataWithoutInit,
   setCurrentEntityType,
   setCurrentEntityId,
+  setSelectedUnitId,
+  setUnitDetailDrawerOpen,
 } = appSlice.actions;
 
 export default appSlice.reducer;

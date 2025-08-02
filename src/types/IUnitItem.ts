@@ -1,4 +1,4 @@
-export interface IUnitTemplate {
+export interface IUnitItem {
   name: string;
   grossArea: number;
   netArea: number;
@@ -18,10 +18,17 @@ export interface IUnitTemplate {
   balconyImage: any | null;
   currentStateId: number | null;
   templateId: number;
-  stageId: number;
   floor: {
     name: string;
     number: number;
+    id: number;
+  };
+  block: {
+    name: string;
+    id: number;
+  };
+  stage: {
+    name: string;
     id: number;
   };
   id: number;

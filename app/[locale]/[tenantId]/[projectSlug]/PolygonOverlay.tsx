@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useAppSelector } from "@redux/hooks";
+import { useAppSelector, useAppDispatch } from "@redux/hooks";
 import { Box, Card, Typography, Fade } from "@mui/material";
 import { IPolygonModel } from "@/types/IPolygonModel";
 import { EntityTypeEnum } from "@/enums/EntityTypeEnum";
+import { setSelectedUnitId, setUnitDetailDrawerOpen } from "@redux/appSlice";
 import usePresentation from "./usePresentation";
+import UnitHoverCard from "./UnitHoverCard";
+import { IPresentationInitResponse } from "@/types/IPresentationInitResponse";
 
 interface PolygonOverlayProps {
   polygons: IPolygonModel[];
@@ -147,12 +150,38 @@ export default function PolygonOverlay({
   imageWidth = 1920,
   imageHeight = 1080,
 }: PolygonOverlayProps) {
-  const { tabBarContentResponse } = useAppSelector((state) => state.AppReducer);
+  const {
+    tabBarContentResponse,
+    selectedUnitId,
+    rightBarContentResponse,
+    presentationInitResponse,
+  } = useAppSelector((state) => state.AppReducer);
+
+  const initResponse =
+    presentationInitResponse || ({} as IPresentationInitResponse);
+
+  const units: any[] = useMemo(
+    () => rightBarContentResponse || [],
+    [rightBarContentResponse]
+  );
+
+  const unitTypes = useMemo(
+    () => initResponse?.unitTypes || [],
+    [initResponse?.unitTypes]
+  );
+
+  const dispatch = useAppDispatch();
+
   const blocks = tabBarContentResponse?.find(
     (item: any) => item.entityName === "Block"
   )?.data;
 
-  const { hadndleChangePresentation } = usePresentation();
+  const {
+    hadndleChangePresentation,
+    updateUrlWithParams,
+    currentEntityType,
+    currentEntityId,
+  } = usePresentation();
 
   const [hoveredPolygon, setHoveredPolygon] = useState<IPolygonModel | null>(
     null
@@ -194,6 +223,20 @@ export default function PolygonOverlay({
     return pathString;
   };
 
+  const getPolygonCenterPoint = (points: { x: number; y: number }[]) => {
+    const screenPoints = points.map((point) =>
+      convertToScreenCoordinates(point)
+    );
+    const centerX =
+      screenPoints.reduce((sum, point) => sum + point.x, 0) /
+      screenPoints.length;
+    const centerY =
+      screenPoints.reduce((sum, point) => sum + point.y, 0) /
+      screenPoints.length;
+
+    return { x: centerX, y: centerY };
+  };
+
   const getPolygonTopPoint = (points: { x: number; y: number }[]) => {
     const screenPoints = points.map((point) =>
       convertToScreenCoordinates(point)
@@ -214,6 +257,37 @@ export default function PolygonOverlay({
       return block?.name || block?.Name || `${polygon.relatedEntityId} Blok`;
     }
     return null;
+  };
+
+  const getUnitName = (polygon: IPolygonModel) => {
+    if (polygon.entityType === EntityTypeEnum.Unit && units && selectedUnitId) {
+      const unit = units.find((unit: any) => unit?.id === selectedUnitId);
+      return unit?.name || `Daire ${selectedUnitId}`;
+    }
+    return null;
+  };
+
+  const getUnitByPolygon = (polygon: IPolygonModel) => {
+    if (polygon.entityType === EntityTypeEnum.Unit && units) {
+      return units.find((unit: any) => unit?.id === polygon.relatedEntityId);
+    }
+    return null;
+  };
+
+  const getNetArea = (unit: any) => {
+    return unit?.netArea || 0;
+  };
+
+  const getGrossArea = (unit: any) => {
+    return unit?.grossArea || 0;
+  };
+
+  const isSelectedUnit = (polygon: IPolygonModel) => {
+    return (
+      polygon.entityType === EntityTypeEnum.Unit &&
+      selectedUnitId &&
+      polygon.relatedEntityId === selectedUnitId
+    );
   };
 
   const handlePolygonHover = (
@@ -256,7 +330,28 @@ export default function PolygonOverlay({
         break;
 
       case EntityTypeEnum.Unit:
-        console.log("Unit clicked:", polygon);
+        if (polygon.relatedEntityId) {
+          if (selectedUnitId === polygon.relatedEntityId) {
+            dispatch(setUnitDetailDrawerOpen(false));
+            dispatch(setSelectedUnitId(null));
+            if (currentEntityType && currentEntityId) {
+              updateUrlWithParams(currentEntityType, currentEntityId, null);
+            }
+          } else {
+            dispatch(setUnitDetailDrawerOpen(false));
+            setTimeout(() => {
+              dispatch(setSelectedUnitId(polygon.relatedEntityId || null));
+              dispatch(setUnitDetailDrawerOpen(true));
+              if (currentEntityType && currentEntityId) {
+                updateUrlWithParams(
+                  currentEntityType,
+                  currentEntityId,
+                  polygon.relatedEntityId
+                );
+              }
+            }, 450);
+          }
+        }
         break;
 
       case EntityTypeEnum.Project:
@@ -281,11 +376,6 @@ export default function PolygonOverlay({
     return null;
   }
 
-  if (polygons.length > 0 && polygons[0].points.length > 0) {
-    const firstPoint = polygons[0].points[0];
-    const converted = convertToScreenCoordinates(firstPoint);
-  }
-
   return (
     <>
       <svg
@@ -308,14 +398,22 @@ export default function PolygonOverlay({
               fill={
                 hoveredPolygon?.id === polygon.id
                   ? "rgba(122, 144, 73, 0.4)"
+                  : isSelectedUnit(polygon)
+                  ? "rgba(122, 144, 73, 0.8)"
                   : "transparent"
               }
               stroke={
                 hoveredPolygon?.id === polygon.id
                   ? "rgba(122, 144, 73, 0.8)"
+                  : isSelectedUnit(polygon)
+                  ? "rgba(122, 144, 73, 0.8)"
                   : "transparent"
               }
-              strokeWidth={hoveredPolygon?.id === polygon.id ? "3" : "1"}
+              strokeWidth={
+                hoveredPolygon?.id === polygon.id || isSelectedUnit(polygon)
+                  ? "3"
+                  : "1"
+              }
               style={{
                 pointerEvents: "auto",
                 cursor: "pointer",
@@ -325,6 +423,7 @@ export default function PolygonOverlay({
                     ? "drop-shadow(0 0 12px rgba(122, 144, 73, 0.6))"
                     : "none",
               }}
+              className={isSelectedUnit(polygon) ? "blink-animation" : ""}
               onMouseEnter={(e) => handlePolygonHover(polygon, e)}
               onMouseLeave={handlePolygonLeave}
               onClick={() => handlePolygonClick(polygon)}
@@ -394,21 +493,106 @@ export default function PolygonOverlay({
                   </text>
                 </>
               )}
+
+            {/* Seçili unit için chip */}
+            {isSelectedUnit(polygon) && getUnitName(polygon) && (
+              <>
+                <g>
+                  <circle
+                    cx={getPolygonCenterPoint(polygon.points).x}
+                    cy={getPolygonCenterPoint(polygon.points).y - 10}
+                    r="6"
+                    fill="rgba(122, 144, 73, 1)"
+                    stroke="rgba(122, 144, 73, 1)"
+                    strokeWidth="2"
+                    style={{
+                      pointerEvents: "none",
+                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                    }}
+                    className="blink-animation"
+                  />
+
+                  <line
+                    x1={getPolygonCenterPoint(polygon.points).x}
+                    y1={getPolygonCenterPoint(polygon.points).y - 10}
+                    x2={getPolygonCenterPoint(polygon.points).x}
+                    y2={getPolygonCenterPoint(polygon.points).y - 35}
+                    stroke="rgba(122, 144, 73, 1)"
+                    strokeWidth="2"
+                    style={{
+                      pointerEvents: "none",
+                    }}
+                  />
+
+                  <rect
+                    x={getPolygonCenterPoint(polygon.points).x - 35}
+                    y={getPolygonCenterPoint(polygon.points).y - 55}
+                    width="70"
+                    height="20"
+                    rx="10"
+                    ry="10"
+                    fill="rgba(122, 144, 73, 1)"
+                    stroke="rgba(122, 144, 73, 1)"
+                    strokeWidth="2"
+                    style={{
+                      pointerEvents: "none",
+                      filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.2))",
+                    }}
+                  />
+                </g>
+
+                <text
+                  x={getPolygonCenterPoint(polygon.points).x}
+                  y={getPolygonCenterPoint(polygon.points).y - 45}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{
+                    fill: "white",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                    fontFamily: "Arial, sans-serif",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                  }}
+                >
+                  {getUnitName(polygon)}
+                </text>
+              </>
+            )}
           </g>
         ))}
       </svg>
       {hoveredPolygon && (
-        <Fade in={!!hoveredPolygon} timeout={200}>
-          <Box>
-            <PolygonCard
-              polygon={hoveredPolygon}
-              mousePosition={mousePosition}
-              containerWidth={containerWidth}
-              containerHeight={containerHeight}
-              blocks={blocks}
-            />
-          </Box>
-        </Fade>
+        <Box>
+          {hoveredPolygon.entityType === EntityTypeEnum.Unit ? (
+            (() => {
+              const unit = getUnitByPolygon(hoveredPolygon);
+              return unit ? (
+                <UnitHoverCard
+                  unit={unit}
+                  unitTypes={unitTypes || []}
+                  getNetArea={getNetArea}
+                  getGrossArea={getGrossArea}
+                  position={mousePosition}
+                  containerWidth={containerWidth}
+                  containerHeight={containerHeight}
+                />
+              ) : null;
+            })()
+          ) : (
+            <Fade in={!!hoveredPolygon} timeout={200}>
+              <Box>
+                <PolygonCard
+                  polygon={hoveredPolygon}
+                  mousePosition={mousePosition}
+                  containerWidth={containerWidth}
+                  containerHeight={containerHeight}
+                  blocks={blocks}
+                />
+              </Box>
+            </Fade>
+          )}
+        </Box>
       )}
     </>
   );

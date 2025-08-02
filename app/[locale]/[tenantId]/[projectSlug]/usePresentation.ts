@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import axiosInstance from "@network/axiosInstance";
@@ -9,10 +9,15 @@ import {
   setGeneralLoading,
   setCurrentEntityType,
   setCurrentEntityId,
+  setSelectedUnitId,
+  setUnitDetailDrawerOpen,
 } from "@redux/appSlice";
 import getAcceptLanguage from "@helpers/Auth/getAcceptLanguage";
 import { EntityTypeEnum } from "@enums/EntityTypeEnum";
 import queryString from "query-string";
+
+// Global singleton flag
+let hasInitialized = false;
 
 const usePresentation = () => {
   const dispatch = useDispatch();
@@ -21,11 +26,16 @@ const usePresentation = () => {
   const { locale, tenantId, projectSlug } = useParams<any>();
   const TenantId = decodeURIComponent(tenantId);
   const ProjectSlug = decodeURIComponent(projectSlug);
-  const { presentationInitResponse, currentEntityType, currentEntityId } =
-    useAppSelector((state) => state.AppReducer);
+  const {
+    presentationInitResponse,
+    currentEntityType,
+    currentEntityId,
+    selectedUnitId,
+  } = useAppSelector((state) => state.AppReducer);
 
   const urlEntityType = searchParams.get("entityType");
   const urlEntityId = searchParams.get("entityId");
+  const urlSelectedUnitId = searchParams.get("selectedUnitId");
 
   const parseEntityType = (entityTypeString: string): EntityTypeEnum | null => {
     const entityTypeNumber = parseInt(entityTypeString, 10);
@@ -40,6 +50,9 @@ const usePresentation = () => {
   };
 
   useEffect(() => {
+    if (hasInitialized) return;
+    hasInitialized = true;
+
     if (urlEntityType && urlEntityId) {
       const entityType = parseEntityType(urlEntityType);
       if (
@@ -49,32 +62,35 @@ const usePresentation = () => {
         dispatch(setCurrentEntityType(entityType));
         dispatch(setCurrentEntityId(urlEntityId));
       }
-    } else if (currentEntityType !== null && currentEntityId) {
-      if (typeof window !== "undefined") {
-        const currentUrl = window.location.pathname;
-        const newQuery = queryString.stringify({
-          entityType: currentEntityType.toString(),
-          entityId: currentEntityId,
-        });
-        router.replace(`${currentUrl}?${newQuery}`, { scroll: false });
+    }
+
+    if (urlSelectedUnitId) {
+      const unitId = parseInt(urlSelectedUnitId, 10);
+      if (!isNaN(unitId) && selectedUnitId !== unitId) {
+        dispatch(setSelectedUnitId(unitId));
+        dispatch(setUnitDetailDrawerOpen(true));
       }
     }
-  }, [
-    urlEntityType,
-    urlEntityId,
-    currentEntityType,
-    currentEntityId,
-    dispatch,
-    router,
-  ]);
+  }, []);
 
-  const updateUrlWithParams = (entityType: EntityTypeEnum, entityId: any) => {
+  const updateUrlWithParams = (
+    entityType: EntityTypeEnum,
+    entityId: any,
+    unitId?: number | null
+  ) => {
     if (typeof window !== "undefined") {
       const currentUrl = window.location.pathname;
-      const newQuery = queryString.stringify({
+      const queryParams: any = {
         entityType: entityType.toString(),
         entityId: entityId.toString(),
-      });
+      };
+      if (unitId) {
+        queryParams.selectedUnitId = unitId.toString();
+      }
+      if (unitId === null) {
+        delete queryParams.selectedUnitId;
+      }
+      const newQuery = queryString.stringify(queryParams);
       router.replace(`${currentUrl}?${newQuery}`, { scroll: false });
     }
   };
@@ -84,6 +100,7 @@ const usePresentation = () => {
     EntityId: any
   ) => {
     dispatch(setGeneralLoading(true));
+    dispatch(setUnitDetailDrawerOpen(false));
     dispatch(setCurrentEntityType(EntityType));
     dispatch(setCurrentEntityId(EntityId));
     updateUrlWithParams(EntityType, EntityId);
@@ -100,11 +117,7 @@ const usePresentation = () => {
       "Accept-Language": getAcceptLanguage(locale),
     };
 
-    const [
-      PresentationResponse,
-      TabBarContentResponse,
-      RightBarContentResponse,
-    ] = await Promise.all([
+    const [PresentationResponse, TabBarContentResponse] = await Promise.all([
       axiosInstance.get(OpsApiRoutes.GetPresentations, {
         params: GeneralParams,
         headers,
@@ -118,16 +131,11 @@ const usePresentation = () => {
         },
         headers,
       }),
-      axiosInstance.get(OpsApiRoutes.GetPresentationRightBar, {
-        params: GeneralParams,
-        headers,
-      }),
     ]);
 
     if (
       !PresentationResponse?.data?.isSuccess ||
-      !TabBarContentResponse?.data?.isSuccess ||
-      !RightBarContentResponse?.data?.isSuccess
+      !TabBarContentResponse?.data?.isSuccess
     ) {
       dispatch(setGeneralLoading(false));
       return;
@@ -136,17 +144,28 @@ const usePresentation = () => {
         setAllPresentationDataWithoutInit({
           presentationResponse: PresentationResponse.data.data,
           tabBarContentResponse: TabBarContentResponse.data.data,
-          rightBarContentResponse: RightBarContentResponse.data.data,
         })
       );
       dispatch(setGeneralLoading(false));
     }
   };
 
+  const handleUnitClick = (unit: any) => {
+    const blockId = unit.block?.id;
+    if (blockId) {
+      dispatch(setSelectedUnitId(unit.id));
+      hadndleChangePresentation(EntityTypeEnum.Block, blockId);
+      updateUrlWithParams(EntityTypeEnum.Block, blockId, unit.id);
+      dispatch(setUnitDetailDrawerOpen(true));
+    }
+  };
+
   return {
     hadndleChangePresentation,
+    handleUnitClick,
     currentEntityType,
     currentEntityId,
+    selectedUnitId,
     updateUrlWithParams,
   };
 };

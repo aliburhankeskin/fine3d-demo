@@ -53,6 +53,13 @@
     "From": "Dan",
     "To": "E",
     "Min": "Min",
-    "Max": "Maks"
+    "Max": "Maks",
+    "UnitDetails": "Daire Detayları",
+    "BasicInfo": "Temel Bilgiler",
+    "AreaInfo": "Alan Bilgileri",
+    "LocationInfo": "Konum Bilgileri",
+    "Specifications": "Özellikler",
+    "Block": "Blok",
+    "Stage": "Aşama"
   }
 }

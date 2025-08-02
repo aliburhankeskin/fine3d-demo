@@ -17,22 +17,23 @@ import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import { FixedSizeList as List } from "react-window";
 import UnitFilter, { FilterValues } from "./UnitFilter";
-import { IUnitTemplate } from "../../../../src/types/IUnitTemplate";
+import { IUnitItem } from "../../../../src/types/IUnitItem";
 import { IPresentationInitResponse } from "../../../../src/types/IPresentationInitResponse";
 import UnitListItem from "./UnitListItem";
+import usePresentation from "./usePresentation";
+import UnitDetailDrawer from "./UnitDetailDrawer";
 
 type ViewMode = "card" | "list";
 
 const UnitDrawer = () => {
-  const { rightBarContentResponse, presentationInitResponse } = useAppSelector(
-    (state) => state.AppReducer
-  );
+  const { rightBarContentResponse, presentationInitResponse, selectedUnitId } =
+    useAppSelector((state) => state.AppReducer);
+  const { handleUnitClick } = usePresentation();
 
   const units: any[] = useMemo(
     () => rightBarContentResponse || [],
     [rightBarContentResponse]
   );
-
   const initResponse =
     presentationInitResponse || ({} as IPresentationInitResponse);
 
@@ -69,18 +70,18 @@ const UnitDrawer = () => {
   );
 
   const getRoomCount = useCallback(
-    (unit: IUnitTemplate): string => {
+    (unit: IUnitItem): string => {
       return getUnitTypeName(unit.unitTypeId);
     },
     [getUnitTypeName]
   );
 
-  const getUnitStatus = (unit: IUnitTemplate): string => {
+  const getUnitStatus = (unit: IUnitItem): string => {
     return "available";
   };
 
   const getNetArea = useCallback(
-    (unit: IUnitTemplate): number => {
+    (unit: IUnitItem): number => {
       const templateUnit = unitTemplates.find(
         (template) => template.id === unit?.templateId
       );
@@ -91,7 +92,7 @@ const UnitDrawer = () => {
   );
 
   const getGrossArea = useCallback(
-    (unit: IUnitTemplate): number => {
+    (unit: IUnitItem): number => {
       const templateUnit = unitTemplates.find(
         (template) => template.id === unit?.templateId
       );
@@ -101,7 +102,7 @@ const UnitDrawer = () => {
   );
 
   const getFacadeDirection = useCallback(
-    (unit: IUnitTemplate): string => {
+    (unit: IUnitItem): string => {
       if (unit.facades && unit.facades.length > 0) {
         const facade = unit.facades[0];
         const facadeMap: { [key: number]: string } = {
@@ -211,6 +212,17 @@ const UnitDrawer = () => {
     label: direction,
   }));
 
+  const selectedUnit = selectedUnitId
+    ? unitData.find((unit) => unit.id === selectedUnitId)
+    : null;
+
+  const getDrawerTitle = () => {
+    if (selectedUnit) {
+      return `${selectedUnit.name} - ${t("UnitDetails")}`;
+    }
+    return t("GeneralView");
+  };
+
   const floorMax =
     unitData.length > 0
       ? Math.max(...unitData.map((unit) => unit.floor?.number || 0))
@@ -228,6 +240,7 @@ const UnitDrawer = () => {
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
+        position: "relative",
       }}
     >
       <Stack
@@ -239,7 +252,7 @@ const UnitDrawer = () => {
         }}
       >
         <Typography fontSize={18} fontWeight={600}>
-          {t("GeneralView")}
+          {getDrawerTitle()}
         </Typography>
         <IconButton>
           <Badge badgeContent={favoriteItems.size} color="primary">
@@ -435,6 +448,7 @@ const UnitDrawer = () => {
             unitTypes: unitTypes,
             getNetArea,
             getGrossArea,
+            handleUnitClick,
           }}
           style={{
             overflow: isMobile ? "visible" : "auto", // Mobile'da scroll yok
@@ -456,6 +470,13 @@ const UnitDrawer = () => {
           {UnitListItem}
         </List>
       </Box>
+
+      <UnitDetailDrawer
+        unit={selectedUnit}
+        unitTypes={unitTypes}
+        getNetArea={getNetArea}
+        getGrossArea={getGrossArea}
+      />
     </Box>
   );
 };

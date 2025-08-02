@@ -28,6 +28,11 @@ export default async function Page({
   const queryEntityId = Array.isArray(searchParamsResolved?.entityId)
     ? searchParamsResolved.entityId[0]
     : searchParamsResolved?.entityId;
+  const querySelectedUnitId = Array.isArray(
+    searchParamsResolved?.selectedUnitId
+  )
+    ? searchParamsResolved.selectedUnitId[0]
+    : searchParamsResolved?.selectedUnitId;
 
   const PresentationInitResponse = await axiosInstance.get<
     IBaseResponse<IPresentationInitResponse>
@@ -48,6 +53,7 @@ export default async function Page({
 
   let entityType = EntityTypeEnum.Project;
   let entityId: string | number = initData?.projectId;
+  let selectedUnitId: number | null = null;
 
   if (queryEntityType && queryEntityId) {
     const parsedEntityType = parseInt(queryEntityType, 10);
@@ -57,6 +63,13 @@ export default async function Page({
     ) {
       entityType = parsedEntityType as EntityTypeEnum;
       entityId = queryEntityId;
+    }
+  }
+
+  if (querySelectedUnitId) {
+    const parsedSelectedUnitId = parseInt(querySelectedUnitId, 10);
+    if (!isNaN(parsedSelectedUnitId)) {
+      selectedUnitId = parsedSelectedUnitId;
     }
   }
 
@@ -88,7 +101,13 @@ export default async function Page({
         headers,
       }),
       axiosInstance.get(OpsApiRoutes.GetPresentationRightBar, {
-        params: GeneralParams,
+        params: {
+          TenantId,
+          ProjectSlug,
+          ProjectId: initData?.projectId,
+          EntityType: EntityTypeEnum.Project,
+          EntityId: initData?.projectId,
+        },
         headers,
       }),
     ]);
@@ -101,6 +120,7 @@ export default async function Page({
       rightBarContentResponse={RightBarContentResponse?.data?.data}
       currentEntityType={entityType}
       currentEntityId={entityId}
+      selectedUnitId={selectedUnitId}
     >
       <AppLayout drawer={<UnitDrawer />}>
         <CanvasWithDrawer />

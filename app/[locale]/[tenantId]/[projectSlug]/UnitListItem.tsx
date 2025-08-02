@@ -12,8 +12,8 @@ import {
 } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { IUnitTemplate } from "../../../../src/types/IUnitTemplate";
-import { IUnitType } from "../../../../src/types/IUnitType";
+import { IUnitItem } from "../../../../src/types/IUnitItem";
+import { IUnitTypeModel } from "../../../../src/types/IUnitTypeModel";
 
 const UnitListItem = ({ index, style, data }: any) => {
   const t = useTranslations("Common");
@@ -26,10 +26,11 @@ const UnitListItem = ({ index, style, data }: any) => {
     unitTypes,
     getNetArea,
     getGrossArea,
+    handleUnitClick,
   } = data;
 
   const [imageError, setImageError] = React.useState(false);
-  const unit: IUnitTemplate = items[index];
+  const unit: IUnitItem = items[index];
   const isFavorite = favoriteItems.has(index);
 
   useEffect(() => {
@@ -66,14 +67,14 @@ const UnitListItem = ({ index, style, data }: any) => {
     );
   }
 
-  const getRoomName = (unit: IUnitTemplate): string => {
+  const getRoomName = (unit: IUnitItem): string => {
     const unitType = unitTypes?.find(
-      (type: IUnitType) => type.id === unit.unitTypeId
+      (type: IUnitTypeModel) => type.id === unit.unitTypeId
     );
     return unitType?.name || "N/A";
   };
 
-  const getFacadeDirection = (unit: IUnitTemplate): string => {
+  const getFacadeDirection = (unit: IUnitItem): string => {
     // facades array'inden direction çıkar
     if (unit.facades && unit.facades.length > 0) {
       const facade = unit.facades[0];
@@ -94,12 +95,12 @@ const UnitListItem = ({ index, style, data }: any) => {
     return t("Unknown");
   };
 
-  const getNetAreaFromTemplate = (unit: IUnitTemplate): number => {
+  const getNetAreaFromTemplate = (unit: IUnitItem): number => {
     // Ana component'teki getNetArea fonksiyonunu kullan
     return getNetArea ? getNetArea(unit) : unit.netArea || 0;
   };
 
-  const getGrossAreaFromTemplate = (unit: IUnitTemplate): number => {
+  const getGrossAreaFromTemplate = (unit: IUnitItem): number => {
     // Ana component'teki getGrossArea fonksiyonunu kullan
     return getGrossArea ? getGrossArea(unit) : unit.grossArea || 0;
   };
@@ -121,7 +122,14 @@ const UnitListItem = ({ index, style, data }: any) => {
               borderRadius: 3,
               height: "190px",
               bgcolor: "card2.main",
+              cursor: "pointer",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+              },
             }}
+            onClick={() => handleUnitClick && handleUnitClick(unit)}
           >
             <Stack direction="row" spacing={2} sx={{ p: 2, height: "100%" }}>
               <Box
@@ -254,6 +262,7 @@ const UnitListItem = ({ index, style, data }: any) => {
               bgcolor: "grey.50",
             },
           }}
+          onClick={() => handleUnitClick && handleUnitClick(unit)}
         >
           <Stack
             direction="row"

@@ -6,6 +6,8 @@ import {
   setAllPresentationData,
   setCurrentEntityType,
   setCurrentEntityId,
+  setSelectedUnitId,
+  setUnitDetailDrawerOpen,
 } from "@redux/appSlice";
 import LoadingComponent from "@components/LoadingComponent";
 import { EntityTypeEnum } from "@enums/EntityTypeEnum";
@@ -18,6 +20,7 @@ export default function DataProvider({
   rightBarContentResponse,
   currentEntityType,
   currentEntityId,
+  selectedUnitId,
 }: {
   children: React.ReactNode;
   presentationInitResponse: any;
@@ -26,6 +29,7 @@ export default function DataProvider({
   rightBarContentResponse: any;
   currentEntityType?: EntityTypeEnum;
   currentEntityId?: string | number;
+  selectedUnitId?: number | null;
 }) {
   const dispatch = useDispatch();
   const [isDataSet, setIsDataSet] = useState(false);
@@ -48,6 +52,10 @@ export default function DataProvider({
       if (currentEntityId !== undefined) {
         dispatch(setCurrentEntityId(currentEntityId?.toString()));
       }
+      if (selectedUnitId !== null && selectedUnitId !== undefined) {
+        dispatch(setSelectedUnitId(selectedUnitId));
+        dispatch(setUnitDetailDrawerOpen(true));
+      }
 
       isInitialized.current = true;
       setIsDataSet(true);
@@ -60,6 +68,7 @@ export default function DataProvider({
     rightBarContentResponse,
     currentEntityType,
     currentEntityId,
+    selectedUnitId,
   ]);
 
   if (!isDataSet) {

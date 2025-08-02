@@ -1,4 +1,4 @@
-export interface IUnitType {
+export interface IUnitTypeModel {
   name: string;
   displayOrder: number;
   id: number;
