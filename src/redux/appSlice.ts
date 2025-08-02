@@ -22,6 +22,8 @@ const initialState: IAppReducer = {
   presentationResponse: null,
   tabBarContentResponse: null,
   rightBarContentResponse: null,
+  currentEntityType: null,
+  currentEntityId: null,
 };
 
 export const appSlice = createSlice({
@@ -55,12 +57,14 @@ export const appSlice = createSlice({
       return state;
     },
     setAllPresentationData: (state, action: PayloadAction<any>) => {
+      const payload = action.payload || {};
       const {
-        presentationInitResponse,
-        presentationResponse,
-        tabBarContentResponse,
-        rightBarContentResponse,
-      } = action.payload;
+        presentationInitResponse = null,
+        presentationResponse = null,
+        tabBarContentResponse = null,
+        rightBarContentResponse = null,
+      } = payload;
+
       state.presentationInitResponse = presentationInitResponse;
       state.presentationResponse = presentationResponse;
       state.tabBarContentResponse = tabBarContentResponse;
@@ -68,11 +72,13 @@ export const appSlice = createSlice({
       return state;
     },
     setAllPresentationDataWithoutInit: (state, action: PayloadAction<any>) => {
+      const payload = action.payload || {};
       const {
-        presentationResponse,
-        tabBarContentResponse,
-        rightBarContentResponse,
-      } = action.payload;
+        presentationResponse = null,
+        tabBarContentResponse = null,
+        rightBarContentResponse = null,
+      } = payload;
+
       state.presentationResponse = presentationResponse;
       state.tabBarContentResponse = tabBarContentResponse;
       state.rightBarContentResponse = rightBarContentResponse;
@@ -94,6 +100,14 @@ export const appSlice = createSlice({
       state.rightBarContentResponse = action.payload;
       return state;
     },
+    setCurrentEntityType: (state, action: PayloadAction<any | null>) => {
+      state.currentEntityType = action.payload;
+      return state;
+    },
+    setCurrentEntityId: (state, action: PayloadAction<string | null>) => {
+      state.currentEntityId = action.payload;
+      return state;
+    },
   },
 });
 
@@ -111,6 +125,8 @@ export const {
   setTabBarContentResponse,
   setRightBarContentResponse,
   setAllPresentationDataWithoutInit,
+  setCurrentEntityType,
+  setCurrentEntityId,
 } = appSlice.actions;
 
 export default appSlice.reducer;

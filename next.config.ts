@@ -8,9 +8,22 @@ const withPWA = require("next-pwa")({
 });
 
 const nextConfig: NextConfig = {
-  reactStrictMode: process.env.NODE_ENV === "production",
+  reactStrictMode: true,
   productionBrowserSourceMaps: false,
   output: "standalone",
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      if (config.optimization?.minimizer?.[0]?.options?.terserOptions) {
+        config.optimization.minimizer[0].options.terserOptions.compress = {
+          ...config.optimization.minimizer[0].options.terserOptions.compress,
+          drop_console: true,
+          drop_debugger: true,
+        };
+      }
+    }
+    return config;
+  },
+
   turbopack: {
     rules: {
       "*.svg": {

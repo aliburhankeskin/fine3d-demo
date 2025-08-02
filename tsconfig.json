@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "target": "es2015",
+    "target": "es2017", // ✅ Modern target
     "downlevelIteration": true,
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    "strictNullChecks": true, // ✅ Null güvenliği
+    "noImplicitAny": true, // ✅ Tip güvenliği
+    "noImplicitReturns": true, // ✅ Return güvenliği
+    "noFallthroughCasesInSwitch": true, // ✅ Switch güvenliği
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -24,52 +24,21 @@
       }
     ],
     "paths": {
-      "@layout/*": [
-        "./src/common/layout/*"
-      ],
-      "@opsTable/*": [
-        "./src/common/opsTable/*"
-      ],
-      "@common/*": [
-        "./src/common/*"
-      ],
-      "@components/*": [
-        "./src/components/*"
-      ],
-      "@enums/*": [
-        "./src/enums/*"
-      ],
-      "@features/*": [
-        "./src/features/*"
-      ],
-      "@forms/*": [
-        "./src/forms/*"
-      ],
-      "@helpers/*": [
-        "./src/helpers/*"
-      ],
-      "@hooks/*": [
-        "./src/hooks/*"
-      ],
-      "@network/*": [
-        "./src/network/*"
-      ],
-      "@redux/*": [
-        "./src/redux/*"
-      ],
-      "@/*": [
-        "./src/*"
-      ]
+      "@layout/*": ["./src/common/layout/*"],
+      "@opsTable/*": ["./src/common/opsTable/*"],
+      "@common/*": ["./src/common/*"],
+      "@components/*": ["./src/components/*"],
+      "@enums/*": ["./src/enums/*"],
+      "@features/*": ["./src/features/*"],
+      "@forms/*": ["./src/forms/*"],
+      "@helpers/*": ["./src/helpers/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@network/*": ["./src/network/*"],
+      "@redux/*": ["./src/redux/*"],
+      "@/*": ["./src/*"]
     },
     "module": "esnext"
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }

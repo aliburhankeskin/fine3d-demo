@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useAppSelector } from "@redux/hooks";
 import { useMediaQuery } from "@mui/material";
 import * as THREE from "three";
@@ -25,7 +25,11 @@ const MIN_CANVAS_HEIGHT = 250;
 export default function Canvas({ canvasHeight }: { canvasHeight?: number }) {
   const { drawerOpen, presentationInitResponse, presentationResponse } =
     useAppSelector((state) => state.AppReducer);
-  const workspaceItems: any[] = presentationResponse?.tags || [];
+
+  const workspaceItems = useMemo(() => {
+    return presentationResponse?.tags || [];
+  }, [presentationResponse?.tags]);
+
   const ContainerWidth = 1920 - (drawerOpen ? 400 : 0);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const {
@@ -41,9 +45,13 @@ export default function Canvas({ canvasHeight }: { canvasHeight?: number }) {
   };
 
   const totalFrames = workspaceItems?.length || 0;
-  const mainFrameAnchors = workspaceItems
-    ?.map((item, index) => (item?.mainFrame ? index : -1))
-    .filter((i) => i >= 0) || [0];
+  const mainFrameAnchors = useMemo(() => {
+    return (
+      workspaceItems
+        ?.map((item: any, index: number) => (item?.mainFrame ? index : -1))
+        .filter((i: number) => i >= 0) || [0]
+    );
+  }, [workspaceItems]);
 
   const [angleDeg, setAngleDeg] = useState(startAngle);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +62,19 @@ export default function Canvas({ canvasHeight }: { canvasHeight?: number }) {
   const [currentDisplayFrame, setCurrentDisplayFrame] = useState(
     mainFrameAnchors?.[0] || 0
   );
+
+  useEffect(() => {
+    const newMainFrame = mainFrameAnchors?.[0] || 0;
+    setCurrentDisplayFrame(newMainFrame);
+    if (currentFrameRef.current !== undefined) {
+      currentFrameRef.current = newMainFrame;
+      targetFrameRef.current = newMainFrame;
+      currentFrameFloatRef.current = newMainFrame;
+
+      const newAngle = ((newMainFrame / totalFrames) * 360 + startAngle) % 360;
+      setAngleDeg(newAngle);
+    }
+  }, [mainFrameAnchors, totalFrames, startAngle]);
   const loadedFramesCountRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer>(null);
@@ -66,47 +87,54 @@ export default function Canvas({ canvasHeight }: { canvasHeight?: number }) {
   const currentFrameFloatRef = useRef(mainFrameAnchors?.[0]);
   const lastDragDeltaRef = useRef(0);
 
-  const preloadNearbyFrames = (centerIndex: number, radius: number = 2) => {
-    const preloadSet = new Set<number>();
-    for (let i = -radius; i <= radius; i++) {
-      preloadSet.add(safeMod(centerIndex + i, totalFrames));
-    }
-    for (const anchor of mainFrameAnchors) preloadSet.add(anchor);
-
-    for (const idx of preloadSet) {
-      if (
-        !textureCacheRef.current.has(idx) &&
-        workspaceItems?.[idx]?.image?.url
-      ) {
-        const tex = textureLoader.load(workspaceItems?.[idx]?.image?.url);
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.minFilter = THREE.LinearFilter;
-        tex.magFilter = THREE.LinearFilter;
-        tex.generateMipmaps = false;
-        textureCacheRef.current.set(idx, tex);
+  const preloadNearbyFrames = useCallback(
+    (centerIndex: number, radius: number = 2) => {
+      const preloadSet = new Set<number>();
+      for (let i = -radius; i <= radius; i++) {
+        preloadSet.add(safeMod(centerIndex + i, totalFrames));
       }
-    }
-  };
+      for (const anchor of mainFrameAnchors) preloadSet.add(anchor);
 
-  const findNextAnchorStepByDirection = (
-    current: number,
-    direction: number
-  ): number => {
-    const normalized = safeMod(current, totalFrames || 1);
-    const sortedAnchors = [...(mainFrameAnchors || [])].sort((a, b) => a - b);
-    if (direction > 0) {
-      for (const anchor of sortedAnchors)
-        if (anchor > normalized) return anchor;
-      return sortedAnchors[0];
-    } else {
-      for (let i = sortedAnchors.length - 1; i >= 0; i--)
-        if (sortedAnchors[i] < normalized) return sortedAnchors[i];
-      return sortedAnchors[sortedAnchors.length - 1];
-    }
-  };
+      for (const idx of preloadSet) {
+        if (
+          !textureCacheRef.current.has(idx) &&
+          workspaceItems?.[idx]?.image?.url
+        ) {
+          const tex = textureLoader.load(workspaceItems?.[idx]?.image?.url);
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.minFilter = THREE.LinearFilter;
+          tex.magFilter = THREE.LinearFilter;
+          tex.generateMipmaps = false;
+          textureCacheRef.current.set(idx, tex);
+        }
+      }
+    },
+    [totalFrames, mainFrameAnchors, workspaceItems, textureLoader]
+  );
 
-  const getImageUrl = (idx: number): string =>
-    workspaceItems?.[idx]?.image?.url ?? "";
+  const findNextAnchorStepByDirection = useCallback(
+    (current: number, direction: number): number => {
+      const normalized = safeMod(current, totalFrames || 1);
+      const sortedAnchors = [...(mainFrameAnchors || [])].sort((a, b) => a - b);
+      if (direction > 0) {
+        for (const anchor of sortedAnchors)
+          if (anchor > normalized) return anchor;
+        return sortedAnchors[0];
+      } else {
+        for (let i = sortedAnchors.length - 1; i >= 0; i--)
+          if (sortedAnchors[i] < normalized) return sortedAnchors[i];
+        return sortedAnchors[sortedAnchors.length - 1];
+      }
+    },
+    [totalFrames, mainFrameAnchors]
+  );
+
+  const getImageUrl = useCallback(
+    (idx: number): string => {
+      return workspaceItems?.[idx]?.image?.url ?? "";
+    },
+    [workspaceItems]
+  );
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -194,14 +222,47 @@ export default function Canvas({ canvasHeight }: { canvasHeight?: number }) {
     scene.add(mesh);
 
     const clock = new THREE.Clock();
-    const baseSpeed = isMobile ? 0.6 : 0.7;
-    let animationId: number;
 
-    const animate = () => {
+    const getAdaptiveSpeed = () => {
+      const refreshRate =
+        (window.screen as any)?.refreshRate ||
+        (window as any)?.screen?.refreshRate ||
+        60;
+      const baseRefreshRate = 60;
+      const refreshRateMultiplier = baseRefreshRate / refreshRate;
+
+      return 0.3 * refreshRateMultiplier;
+    };
+
+    const baseSpeed = getAdaptiveSpeed();
+    let animationId: number;
+    let lastFrameTime = 0;
+    let frameTimeBuffer: number[] = [];
+
+    const animate = (currentTime: number) => {
       animationId = requestAnimationFrame(animate);
 
+      const frameTime = currentTime - lastFrameTime;
+      lastFrameTime = currentTime;
+
+      frameTimeBuffer.push(frameTime);
+      if (frameTimeBuffer.length > 10) {
+        frameTimeBuffer.shift();
+      }
+
+      const avgFrameTime =
+        frameTimeBuffer.reduce((a, b) => a + b, 0) / frameTimeBuffer.length;
+      const targetFrameTime = 1000 / 60;
+      const performanceMultiplier = Math.min(
+        2,
+        targetFrameTime / (avgFrameTime || targetFrameTime)
+      );
+
       const deltaTime = Math.min(clock.getDelta(), 0.1);
-      const frameMultiplier = Math.max(1, deltaTime * 60);
+      const frameMultiplier = Math.max(
+        0.5,
+        deltaTime * 60 * performanceMultiplier
+      );
 
       let diff = targetFrameRef.current - currentFrameFloatRef.current;
       if (Math.abs(diff) > totalFrames / 2) {
@@ -266,7 +327,7 @@ export default function Canvas({ canvasHeight }: { canvasHeight?: number }) {
 
       await Promise.all(promises);
       setIsLoading(false);
-      animate(); // ⬅️ preload sonrası animasyon başlasın
+      animate(performance.now()); // ⬅️ preload sonrası animasyon başlasın
     };
     preloadAllFrames();
 
@@ -276,7 +337,22 @@ export default function Canvas({ canvasHeight }: { canvasHeight?: number }) {
     const dragThreshold = 20;
 
     const updateFrameFromDelta = (delta: number) => {
-      const frameChange = delta / (isMobile ? 12 : 15); // Daha yumuşak drag
+      const avgFrameTime =
+        frameTimeBuffer.length > 0
+          ? frameTimeBuffer.reduce((a, b) => a + b, 0) / frameTimeBuffer.length
+          : 16.67;
+
+      const targetFrameTime = 1000 / 60;
+      const dragSensitivityMultiplier = Math.max(
+        0.5,
+        Math.min(2, targetFrameTime / avgFrameTime)
+      );
+
+      const baseDragSensitivity = isMobile ? 12 : 15;
+      const adjustedSensitivity =
+        baseDragSensitivity / dragSensitivityMultiplier;
+
+      const frameChange = delta / adjustedSensitivity;
       targetFrameRef.current += frameChange;
       lastDragDeltaRef.current = frameChange;
     };
@@ -469,7 +545,7 @@ export default function Canvas({ canvasHeight }: { canvasHeight?: number }) {
     cameraRef.current.bottom = -cameraHeight / 2;
     cameraRef.current.updateProjectionMatrix();
     rendererRef.current.setSize(w, h);
-  }, [drawerOpen]);
+  }, [drawerOpen, ContainerWidth, cameraHeight, workspaceItems]);
 
   const currentFramePolygons =
     workspaceItems?.[currentDisplayFrame]?.polygons || [];

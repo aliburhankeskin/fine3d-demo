@@ -1,27 +1,73 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { useAppSelector } from "@redux/hooks";
 import { Box, ButtonBase } from "@mui/material";
+import { EntityTypeEnum } from "@enums/EntityTypeEnum";
+import usePresentation from "./usePresentation";
 
 interface StaticButton {
-  id: string;
-  name: string;
-  onClick?: () => void;
+  Id: string;
+  Name: string;
 }
 
 interface BottomFloatingBarProps {
-  staticButtons?: StaticButton[];
   maxWidth?: number;
 }
 
-const BottomFloatingBar = ({
-  staticButtons = [],
-  maxWidth = 600,
-}: BottomFloatingBarProps) => {
-  const tabBarContentResponse =
-    useAppSelector((state) => state.AppReducer?.tabBarContentResponse) || [];
-  const [activeIndex, setActiveIndex] = useState(0);
+const BottomFloatingBar = ({ maxWidth = 600 }: BottomFloatingBarProps) => {
+  const { hadndleChangePresentation } = usePresentation();
+  const {
+    presentationInitResponse,
+    currentEntityType,
+    currentEntityId,
+    tabBarContentResponse,
+  } = useAppSelector((state) => state.AppReducer);
+
+  const staticButtons: StaticButton[] =
+    currentEntityType === EntityTypeEnum.Project || EntityTypeEnum.Block
+      ? [
+          {
+            Id: "-1",
+            Name: "Proje Görünümü",
+          },
+        ]
+      : [];
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const allItems = [
+    ...staticButtons,
+    ...(tabBarContentResponse[0]?.data || []),
+  ];
+
+  const getActiveIndex = () => {
+    if (currentEntityType === EntityTypeEnum.Project) {
+      return 0;
+    }
+
+    const tabBarItems = tabBarContentResponse[0]?.data || [];
+
+    const foundIndex = tabBarItems.findIndex((item: any) => {
+      const itemId = item.Id;
+      const currentId = currentEntityId;
+
+      return (
+        itemId == currentId ||
+        String(itemId) === String(currentId) ||
+        Number(itemId) === Number(currentId)
+      );
+    });
+
+    if (foundIndex !== -1) {
+      const finalIndex = staticButtons.length + foundIndex;
+      return finalIndex;
+    }
+
+    return 0;
+  };
+
+  const activeIndex = getActiveIndex();
+
   const tabWidth = 125;
   const horizontalPadding = 12;
   const verticalPadding = 6;
@@ -33,15 +79,50 @@ const BottomFloatingBar = ({
     container.scrollLeft += e.deltaY;
   };
 
-  const allItems = [
-    ...staticButtons,
-    ...(tabBarContentResponse[0]?.data || []),
-  ];
   const totalWidth = tabWidth * allItems.length + horizontalPadding * 2;
   const containerWidth = Math.min(totalWidth, maxWidth);
+
   const isScrollable = totalWidth > maxWidth;
 
-  return (
+  useEffect(() => {
+    const scrollToActiveItem = (index: number) => {
+      if (!scrollContainerRef.current || !isScrollable) return;
+
+      const container = scrollContainerRef.current;
+      const itemPosition = index * tabWidth;
+      const containerWidth = container.clientWidth;
+      const scrollLeft = container.scrollLeft;
+
+      if (itemPosition < scrollLeft) {
+        container.scrollLeft = itemPosition;
+      } else if (itemPosition + tabWidth > scrollLeft + containerWidth) {
+        container.scrollLeft = itemPosition + tabWidth - containerWidth;
+      }
+    };
+
+    scrollToActiveItem(activeIndex);
+  }, [currentEntityType, currentEntityId, isScrollable, activeIndex, tabWidth]);
+
+  const handleClick = (index: number) => {
+    switch (currentEntityType) {
+      case EntityTypeEnum.Project:
+      case EntityTypeEnum.Block:
+        if (index === 0) {
+          hadndleChangePresentation(
+            EntityTypeEnum.Project,
+            presentationInitResponse?.projectId
+          );
+        } else {
+          hadndleChangePresentation(EntityTypeEnum.Block, allItems[index]?.Id);
+        }
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  return allItems?.length <= 1 ? null : (
     <Box
       sx={{
         position: "absolute",
@@ -54,7 +135,7 @@ const BottomFloatingBar = ({
         alignItems: "center",
         justifyContent: "center",
         backdropFilter: "blur(4px)",
-        zIndex: 10,
+        zIndex: 9999999,
         px: `${horizontalPadding}px`,
         py: `${verticalPadding}px`,
         width: containerWidth,
@@ -63,7 +144,6 @@ const BottomFloatingBar = ({
         boxShadow: 3,
       }}
     >
-      {/* Sliding indicator - sadece scrollable değilse göster */}
       {!isScrollable && (
         <Box
           sx={{
@@ -84,7 +164,6 @@ const BottomFloatingBar = ({
         />
       )}
 
-      {/* Scrollable container */}
       <Box
         ref={scrollContainerRef}
         onWheel={handleWheel}
@@ -100,7 +179,6 @@ const BottomFloatingBar = ({
             ? `${maxWidth - horizontalPadding * 2}px`
             : "100%",
           gap: 0,
-          // Hide scrollbar completely
           "&::-webkit-scrollbar": {
             display: "none",
           },
@@ -108,50 +186,11 @@ const BottomFloatingBar = ({
           msOverflowStyle: "none",
         }}
       >
-        {/* Statik butonlar */}
-        {staticButtons.map((button, index) => (
-          <ButtonBase
-            key={button.id}
-            onClick={() => {
-              setActiveIndex(index);
-              button.onClick?.();
-            }}
-            disableRipple
-            disableTouchRipple
-            sx={{
-              width: tabWidth,
-              height: `calc(100% - ${verticalPadding * 2}px)`,
-              borderRadius: 999,
-              position: "relative",
-              zIndex: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 14,
-              fontWeight: 500,
-              textTransform: "none",
-              color: activeIndex === index ? "#fff" : "#333",
-              bgcolor: activeIndex === index ? "#7A9049" : "transparent",
-              "&:hover": {
-                bgcolor:
-                  activeIndex === index ? "#7A9049" : "rgba(47, 61, 94, 0.1)",
-              },
-              "&:active": { bgcolor: "transparent" },
-              minHeight: "36px",
-              flexShrink: 0,
-              transition: "background-color 300ms ease",
-            }}
-          >
-            {button.name}
-          </ButtonBase>
-        ))}
-
         {allItems?.map((block: any, index: number) => {
-          const adjustedIndex = index + staticButtons.length;
           return (
             <ButtonBase
               key={block?.Id}
-              onClick={() => setActiveIndex(adjustedIndex)}
+              onClick={() => handleClick(index)}
               disableRipple
               disableTouchRipple
               sx={{
@@ -166,9 +205,8 @@ const BottomFloatingBar = ({
                 fontSize: 14,
                 fontWeight: 500,
                 textTransform: "none",
-                color: activeIndex === adjustedIndex ? "#fff" : "#333",
-                bgcolor:
-                  activeIndex === adjustedIndex ? "#7A9049" : "transparent",
+                color: activeIndex === index ? "#fff" : "#333",
+                bgcolor: activeIndex === index ? "#7A9049" : "transparent",
                 "&:hover": {
                   bgcolor: "#7A9049",
                   color: "#fff",

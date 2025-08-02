@@ -12,12 +12,22 @@ import DataProvider from "@/providers/DataProvider";
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; tenantId: string; projectSlug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { locale, tenantId, projectSlug } = await params;
+  const searchParamsResolved = await searchParams;
   const TenantId = decodeURIComponent(tenantId);
   const ProjectSlug = decodeURIComponent(projectSlug);
+
+  const queryEntityType = Array.isArray(searchParamsResolved?.entityType)
+    ? searchParamsResolved.entityType[0]
+    : searchParamsResolved?.entityType;
+  const queryEntityId = Array.isArray(searchParamsResolved?.entityId)
+    ? searchParamsResolved.entityId[0]
+    : searchParamsResolved?.entityId;
 
   const PresentationInitResponse = await axiosInstance.get<
     IBaseResponse<IPresentationInitResponse>
@@ -30,19 +40,32 @@ export default async function Page({
       "Accept-Language": getAcceptLanguage(locale),
     },
   });
-
   if (!PresentationInitResponse?.data?.isSuccess) {
     return <div>Error loading presentation</div>;
   }
 
   const initData = PresentationInitResponse?.data?.data;
 
+  let entityType = EntityTypeEnum.Project;
+  let entityId: string | number = initData?.projectId;
+
+  if (queryEntityType && queryEntityId) {
+    const parsedEntityType = parseInt(queryEntityType, 10);
+    if (
+      !isNaN(parsedEntityType) &&
+      Object.values(EntityTypeEnum).includes(parsedEntityType)
+    ) {
+      entityType = parsedEntityType as EntityTypeEnum;
+      entityId = queryEntityId;
+    }
+  }
+
   const GeneralParams = {
     TenantId,
     ProjectSlug,
     ProjectId: initData?.projectId,
-    EntityType: EntityTypeEnum.Project,
-    EntityId: initData?.projectId,
+    EntityType: entityType,
+    EntityId: entityId,
   };
 
   const headers = {
@@ -76,6 +99,8 @@ export default async function Page({
       presentationResponse={PresentationResponse?.data?.data || null}
       tabBarContentResponse={TabBarContentResponse?.data?.data || null}
       rightBarContentResponse={RightBarContentResponse?.data?.data}
+      currentEntityType={entityType}
+      currentEntityId={entityId}
     >
       <AppLayout drawer={<UnitDrawer />}>
         <CanvasWithDrawer />

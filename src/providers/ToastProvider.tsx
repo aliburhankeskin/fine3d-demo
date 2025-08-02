@@ -5,7 +5,11 @@ import { closeSnackbar, SnackbarProvider } from "notistack";
 import { IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
 
-const ToastProvider = ({ children }: any) => {
+interface ToastProviderProps {
+  children: React.ReactNode;
+}
+
+const ToastProvider = ({ children }: ToastProviderProps) => {
   return (
     <SnackbarProvider
       anchorOrigin={{

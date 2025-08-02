@@ -9,12 +9,7 @@ import GeneralLoading from "./GeneralLoading";
 import { ClientErrorBoundary } from "./ClientErrorBoundary";
 import { useGlobalErrorListener } from "@/providers/useGlobalErrorListener";
 
-const BaseProvider = ({ children }: any) => {
-  if (process.env.NODE_ENV === "production") {
-    console.log = () => {};
-    console.warn = () => {};
-    console.error = () => {};
-  }
+const BaseProvider = ({ children }: { children: React.ReactNode }) => {
   useGlobalErrorListener();
   useStorageListenerLogout();
   useConnection();
